@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "garment": {
+    "type": "gatheredSkirt",
+    "name": "Everyday gathered skirt",
+    "waistFinish": "elasticCasing",
+    "finishedLengthMm": 700,
+    "fullnessRatio": 2,
+    "hipEaseMm": 100,
+    "waistbandFinishedHeightMm": 40,
+    "elasticWidthMm": 25,
+    "elasticReductionMm": 30,
+    "ruffle": {
+      "enabled": true,
+      "finishedHeightMm": 120,
+      "fullnessRatio": 1.6
+    }
+  },
+  "measurements": {
+    "waistCircumferenceMm": 760,
+    "hipCircumferenceMm": 1000
+  },
+  "construction": {
+    "seamAllowanceMm": 10,
+    "hemAllowanceMm": 30,
+    "elasticOverlapMm": 20
+  },
+  "print": {
+    "paper": "A4",
+    "marginMm": 10,
+    "overlapMm": 10
+  }
+}

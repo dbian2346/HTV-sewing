@@ -1,0 +1,12 @@
+{
+  "name": "gathered-skirt-mvp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node src/cli.ts",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": { "pdf-lib": "^1.17.1" },
+  "engines": { "node": ">=22.18" }
+}

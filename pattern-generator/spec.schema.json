@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gathered-skirt:spec:1",
+  "title": "Gathered skirt pattern input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "garment", "measurements", "construction", "print"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "garment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "name", "waistFinish", "finishedLengthMm", "fullnessRatio", "hipEaseMm", "waistbandFinishedHeightMm", "elasticWidthMm", "elasticReductionMm", "ruffle"],
+      "properties": {
+        "type": { "const": "gatheredSkirt" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "waistFinish": { "const": "elasticCasing" },
+        "finishedLengthMm": { "type": "number", "minimum": 250, "maximum": 1500 },
+        "fullnessRatio": { "type": "number", "minimum": 1, "maximum": 4 },
+        "hipEaseMm": { "type": "number", "minimum": 0, "maximum": 300 },
+        "waistbandFinishedHeightMm": { "type": "number", "minimum": 20, "maximum": 80 },
+        "elasticWidthMm": { "type": "number", "minimum": 5, "maximum": 60 },
+        "elasticReductionMm": { "type": "number", "minimum": 0, "maximum": 150 },
+        "ruffle": {
+          "type": "object", "additionalProperties": false,
+          "required": ["enabled", "finishedHeightMm", "fullnessRatio"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "finishedHeightMm": { "type": "number", "minimum": 30, "maximum": 500 },
+            "fullnessRatio": { "type": "number", "minimum": 1, "maximum": 3 }
+          }
+        }
+      }
+    },
+    "measurements": {
+      "type": "object", "additionalProperties": false,
+      "required": ["waistCircumferenceMm", "hipCircumferenceMm"],
+      "properties": {
+        "waistCircumferenceMm": { "type": "number", "minimum": 400, "maximum": 2000 },
+        "hipCircumferenceMm": { "type": "number", "minimum": 400, "maximum": 2500 }
+      }
+    },
+    "construction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seamAllowanceMm", "hemAllowanceMm", "elasticOverlapMm"],
+      "properties": {
+        "seamAllowanceMm": { "type": "number", "minimum": 5, "maximum": 30 },
+        "hemAllowanceMm": { "type": "number", "minimum": 10, "maximum": 80 },
+        "elasticOverlapMm": { "type": "number", "minimum": 10, "maximum": 50 }
+      }
+    },
+    "print": {
+      "type": "object", "additionalProperties": false,
+      "required": ["paper", "marginMm", "overlapMm"],
+      "properties": {
+        "paper": { "enum": ["A4", "Letter"] },
+        "marginMm": { "type": "number", "minimum": 5, "maximum": 25 },
+        "overlapMm": { "type": "number", "minimum": 0, "maximum": 30 }
+      }
+    }
+  }
+}

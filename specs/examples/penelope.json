@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "measurementSystem": "metric",
+  "garment": { "designId": "penelope", "family": "skirt", "name": "Pencil skirt with back vent" },
+  "measurements": {
+    "waist": 760, "seat": 1020, "waistToHips": 190,
+    "waistToSeat": 230, "waistToKnee": 590,
+    "waistBack": 390, "seatBack": 530
+  },
+  "options": {
+    "curvedDarts": true, "backVent": true, "nrOfDarts": 2,
+    "waistband": true, "waistEasePct": 1, "seatEasePct": 1,
+    "lengthBonusPct": 0
+  },
+  "construction": { "seamAllowanceMm": 10 },
+  "render": { "complete": true, "paperless": false },
+  "print": { "paper": "A4", "marginMm": 10, "overlapMm": 10, "calibrationSquareMm": 50 },
+  "fabric": { "structure": "woven", "stretchPct": 0, "shrinkagePct": 3, "directionalPrint": false }
+}

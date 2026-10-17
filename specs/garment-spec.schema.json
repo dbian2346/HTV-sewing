@@ -1,0 +1,823 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:garment-pattern-spec:2",
+  "title": "Versioned garment pattern request v2",
+  "description": "Canonical application input. Design-specific options are converted to FreeSewing settings by map-to-freesewing.mjs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "measurementSystem",
+    "garment",
+    "measurements",
+    "options",
+    "construction",
+    "render",
+    "print"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "measurementSystem": {
+      "const": "metric"
+    },
+    "garment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "designId",
+        "family",
+        "name"
+      ],
+      "properties": {
+        "designId": {
+          "enum": [
+            "penelope",
+            "titan",
+            "teagan",
+            "simon",
+            "sophie",
+            "carlita"
+          ]
+        },
+        "family": {
+          "enum": [
+            "skirt",
+            "trousers",
+            "knitTop",
+            "shirt",
+            "dress",
+            "coat"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      }
+    },
+    "measurements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ankle": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "biceps": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "bustFront": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "bustPointToUnderbust": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "bustSpan": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "chest": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "crossSeam": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "crossSeamFront": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "crotchDepth": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "head": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "heel": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "highBust": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "highBustFront": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "hips": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "hpsToBust": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "hpsToWaistBack": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "hpsToWaistFront": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "inseam": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "knee": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "neck": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "seat": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "seatBack": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "shoulderSlope": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60
+        },
+        "shoulderToElbow": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "shoulderToShoulder": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "shoulderToWrist": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "underbust": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "upperLeg": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waist": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waistBack": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waistToArmpit": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waistToFloor": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waistToHips": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waistToKnee": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waistToSeat": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waistToUnderbust": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "waistToUpperLeg": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "wrist": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3000
+        }
+      }
+    },
+    "options": {
+      "type": "object"
+    },
+    "construction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seamAllowanceMm"
+      ],
+      "properties": {
+        "seamAllowanceMm": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "paperless"
+      ],
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "paperless": {
+          "type": "boolean"
+        }
+      }
+    },
+    "print": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "paper",
+        "marginMm",
+        "overlapMm",
+        "calibrationSquareMm"
+      ],
+      "properties": {
+        "paper": {
+          "enum": [
+            "A4",
+            "Letter"
+          ]
+        },
+        "marginMm": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 25
+        },
+        "overlapMm": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "calibrationSquareMm": {
+          "const": 50
+        }
+      }
+    },
+    "fabric": {
+      "description": "Metadata for downstream fabric planning; not passed to FreeSewing by this adapter.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "structure": {
+          "enum": [
+            "woven",
+            "knit",
+            "unknown"
+          ]
+        },
+        "stretchPct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "shrinkagePct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "directionalPrint": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "title": "penelope settings",
+      "properties": {
+        "garment": {
+          "properties": {
+            "designId": {
+              "const": "penelope"
+            },
+            "family": {
+              "const": "skirt"
+            }
+          }
+        },
+        "measurements": {
+          "required": [
+            "seat",
+            "waist",
+            "waistToHips",
+            "waistToKnee",
+            "waistToSeat"
+          ]
+        },
+        "options": {
+          "properties": {
+            "curvedDarts": {
+              "type": "boolean"
+            },
+            "backVent": {
+              "type": "boolean"
+            },
+            "nrOfDarts": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2
+            },
+            "waistband": {
+              "type": "boolean"
+            },
+            "lengthBonusPct": {
+              "type": "number",
+              "minimum": -50,
+              "maximum": 50
+            },
+            "hemBonusPct": {
+              "type": "number",
+              "minimum": -35,
+              "maximum": 0
+            },
+            "waistEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "seatEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 8
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "title": "titan settings",
+      "properties": {
+        "garment": {
+          "properties": {
+            "designId": {
+              "const": "titan"
+            },
+            "family": {
+              "const": "trousers"
+            }
+          }
+        },
+        "measurements": {
+          "required": [
+            "crossSeam",
+            "crossSeamFront",
+            "knee",
+            "seat",
+            "seatBack",
+            "waist",
+            "waistBack",
+            "waistToFloor",
+            "waistToHips",
+            "waistToKnee",
+            "waistToSeat",
+            "waistToUpperLeg"
+          ]
+        },
+        "options": {
+          "properties": {
+            "waistEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "seatEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "kneeEasePct": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 25
+            },
+            "waistHeightPct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "lengthBonusPct": {
+              "type": "number",
+              "minimum": -20,
+              "maximum": 10
+            },
+            "crotchDropPct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 15
+            },
+            "fitKnee": {
+              "type": "boolean"
+            },
+            "waistAngleDeg": {
+              "type": "number",
+              "minimum": -20,
+              "maximum": 20
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "title": "teagan settings",
+      "properties": {
+        "garment": {
+          "properties": {
+            "designId": {
+              "const": "teagan"
+            },
+            "family": {
+              "const": "knitTop"
+            }
+          }
+        },
+        "measurements": {
+          "required": [
+            "biceps",
+            "chest",
+            "hips",
+            "hpsToBust",
+            "hpsToWaistBack",
+            "neck",
+            "shoulderSlope",
+            "shoulderToShoulder",
+            "shoulderToWrist",
+            "waist",
+            "waistToArmpit",
+            "waistToHips",
+            "wrist"
+          ]
+        },
+        "options": {
+          "properties": {
+            "chestEasePct": {
+              "type": "number",
+              "minimum": -4,
+              "maximum": 35
+            },
+            "bicepsEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 50
+            },
+            "sleeveLengthPct": {
+              "type": "number",
+              "minimum": 20,
+              "maximum": 100
+            },
+            "necklineDepthPct": {
+              "type": "number",
+              "minimum": 20,
+              "maximum": 40
+            },
+            "necklineWidthPct": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 50
+            },
+            "lengthBonusPct": {
+              "type": "number",
+              "minimum": -4,
+              "maximum": 60
+            },
+            "fitWaist": {
+              "type": "boolean"
+            },
+            "waistEasePct": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 40
+            },
+            "hipsEasePct": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 30
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "title": "simon settings",
+      "properties": {
+        "garment": {
+          "properties": {
+            "designId": {
+              "const": "simon"
+            },
+            "family": {
+              "const": "shirt"
+            }
+          }
+        },
+        "measurements": {
+          "required": [
+            "biceps",
+            "chest",
+            "hips",
+            "hpsToBust",
+            "hpsToWaistBack",
+            "neck",
+            "shoulderSlope",
+            "shoulderToShoulder",
+            "shoulderToWrist",
+            "waist",
+            "waistToArmpit",
+            "waistToHips",
+            "wrist"
+          ]
+        },
+        "options": {
+          "properties": {
+            "chestEasePct": {
+              "type": "number",
+              "minimum": -4,
+              "maximum": 35
+            },
+            "waistEasePct": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 35
+            },
+            "hipsEasePct": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 35
+            },
+            "boxPleat": {
+              "type": "boolean"
+            },
+            "buttons": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 12
+            },
+            "separateButtonPlacket": {
+              "type": "boolean"
+            },
+            "separateButtonholePlacket": {
+              "type": "boolean"
+            },
+            "splitYoke": {
+              "type": "boolean"
+            },
+            "collarAngleDeg": {
+              "type": "number",
+              "minimum": 60,
+              "maximum": 130
+            },
+            "collarStandWidthPct": {
+              "type": "number",
+              "minimum": 3,
+              "maximum": 13
+            },
+            "sleeveLengthBonusPct": {
+              "type": "number",
+              "minimum": -40,
+              "maximum": 10
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "title": "sophie settings",
+      "properties": {
+        "garment": {
+          "properties": {
+            "designId": {
+              "const": "sophie"
+            },
+            "family": {
+              "const": "dress"
+            }
+          }
+        },
+        "measurements": {
+          "required": [
+            "bustFront",
+            "bustPointToUnderbust",
+            "bustSpan",
+            "hips",
+            "hpsToBust",
+            "hpsToWaistBack",
+            "seat",
+            "shoulderSlope",
+            "shoulderToShoulder",
+            "underbust",
+            "waist",
+            "waistToHips",
+            "waistToKnee",
+            "waistToSeat",
+            "waistToUnderbust"
+          ]
+        },
+        "options": {
+          "properties": {
+            "strapWidthPct": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 100
+            },
+            "necklineCoveragePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 90
+            },
+            "lengthBonusPct": {
+              "type": "number",
+              "minimum": -50,
+              "maximum": 50
+            },
+            "bustEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 25
+            },
+            "underbustEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 25
+            },
+            "waistEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 25
+            },
+            "hipsEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 25
+            },
+            "seatEasePct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 25
+            },
+            "armholeDropPct": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 90
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "title": "carlita settings",
+      "properties": {
+        "garment": {
+          "properties": {
+            "designId": {
+              "const": "carlita"
+            },
+            "family": {
+              "const": "coat"
+            }
+          }
+        },
+        "measurements": {
+          "required": [
+            "biceps",
+            "bustSpan",
+            "chest",
+            "highBust",
+            "hpsToBust",
+            "hpsToWaistBack",
+            "neck",
+            "seat",
+            "shoulderSlope",
+            "shoulderToElbow",
+            "shoulderToShoulder",
+            "shoulderToWrist",
+            "waist",
+            "waistToArmpit",
+            "waistToFloor",
+            "waistToHips",
+            "waistToSeat",
+            "wrist"
+          ]
+        },
+        "options": {
+          "properties": {
+            "chestEasePct": {
+              "type": "number",
+              "minimum": -4,
+              "maximum": 35
+            },
+            "waistEasePct": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 25
+            },
+            "seatEasePct": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 25
+            },
+            "lengthPct": {
+              "type": "number",
+              "minimum": 35,
+              "maximum": 100
+            },
+            "beltWidthPct": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 20
+            },
+            "sleeveBendDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "pocketWidthPct": {
+              "type": "number",
+              "minimum": 70,
+              "maximum": 120
+            },
+            "pocketHeightPct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "chestPocketAngleDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 6
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

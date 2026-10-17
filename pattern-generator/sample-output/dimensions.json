@@ -1,0 +1,37 @@
+{
+  "shellCircumferenceMm": 1520,
+  "effectiveFullnessRatio": 2,
+  "shellVisibleHeightMm": 540,
+  "elasticCutLengthMm": 750,
+  "ruffleCircumferenceMm": 2432,
+  "pieces": [
+    {
+      "id": "shell",
+      "cut": "Cut 2 on fold",
+      "cutWidthMm": 390,
+      "cutHeightMm": 560
+    },
+    {
+      "id": "band",
+      "cut": "Cut 1 on fold; fold across center",
+      "cutWidthMm": 770,
+      "cutHeightMm": 100
+    },
+    {
+      "id": "ruffle",
+      "cut": "Cut 2 on fold; gather top",
+      "cutWidthMm": 618,
+      "cutHeightMm": 160
+    }
+  ],
+  "tiles": {
+    "paperWidthMm": 210,
+    "paperHeightMm": 297,
+    "contentWidthMm": 190,
+    "contentHeightMm": 277,
+    "stepX": 180,
+    "stepY": 267,
+    "cols": 5,
+    "rows": 4
+  }
+}

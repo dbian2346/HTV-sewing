@@ -1,0 +1,110 @@
+{
+  "catalogVersion": 1,
+  "verifiedAgainst": "FreeSewing design reference, 2026-10-17",
+  "mappingStatus": "documented keys; package execution still required before production use",
+  "optionConvention": "Input percentage points are divided by 100 before passing to FreeSewing options. Boolean, count, and degree values pass through unchanged. Omitted options use FreeSewing defaults.",
+  "designs": [
+    {
+      "designId": "penelope", "family": "skirt", "name": "Pencil skirt", "package": "@freesewing/penelope",
+      "source": "https://freesewing.dev/reference/designs/penelope/",
+      "requiredMeasurements": ["seat", "waist", "waistToHips", "waistToKnee", "waistToSeat"],
+      "optionalMeasurements": ["seatBack", "waistBack"],
+      "options": {
+        "curvedDarts": {"fsKey":"curvedDarts","type":"boolean"},
+        "backVent": {"fsKey":"backVent","type":"boolean"},
+        "nrOfDarts": {"fsKey":"nrOfDarts","type":"integer","min":1,"max":2},
+        "waistband": {"fsKey":"waistband","type":"boolean"},
+        "lengthBonusPct": {"fsKey":"lengthBonus","type":"percent","min":-50,"max":50},
+        "hemBonusPct": {"fsKey":"hemBonus","type":"percent","min":-35,"max":0},
+        "waistEasePct": {"fsKey":"waistEase","type":"percent","min":0,"max":8},
+        "seatEasePct": {"fsKey":"seatEase","type":"percent","min":0,"max":8}
+      }
+    },
+    {
+      "designId": "titan", "family": "trousers", "name": "Trouser block", "package": "@freesewing/titan",
+      "source": "https://freesewing.dev/reference/designs/titan/",
+      "requiredMeasurements": ["crossSeam", "crossSeamFront", "knee", "seat", "seatBack", "waist", "waistBack", "waistToFloor", "waistToHips", "waistToKnee", "waistToSeat", "waistToUpperLeg"],
+      "optionalMeasurements": [],
+      "options": {
+        "waistEasePct": {"fsKey":"waistEase","type":"percent","min":0,"max":10},
+        "seatEasePct": {"fsKey":"seatEase","type":"percent","min":0,"max":10},
+        "kneeEasePct": {"fsKey":"kneeEase","type":"percent","min":1,"max":25},
+        "waistHeightPct": {"fsKey":"waistHeight","type":"percent","min":0,"max":100},
+        "lengthBonusPct": {"fsKey":"lengthBonus","type":"percent","min":-20,"max":10},
+        "crotchDropPct": {"fsKey":"crotchDrop","type":"percent","min":0,"max":15},
+        "fitKnee": {"fsKey":"fitKnee","type":"boolean"},
+        "waistAngleDeg": {"fsKey":"waistAngle","type":"degrees","min":-20,"max":20}
+      }
+    },
+    {
+      "designId": "teagan", "family": "knitTop", "name": "T-shirt", "package": "@freesewing/teagan",
+      "source": "https://freesewing.dev/reference/designs/teagan/",
+      "requiredMeasurements": ["biceps", "chest", "hips", "hpsToBust", "hpsToWaistBack", "neck", "shoulderSlope", "shoulderToShoulder", "shoulderToWrist", "waist", "waistToArmpit", "waistToHips", "wrist"],
+      "optionalMeasurements": ["highBust"],
+      "options": {
+        "chestEasePct": {"fsKey":"chestEase","type":"percent","min":-4,"max":35},
+        "bicepsEasePct": {"fsKey":"bicepsEase","type":"percent","min":0,"max":50},
+        "sleeveLengthPct": {"fsKey":"sleeveLength","type":"percent","min":20,"max":100},
+        "necklineDepthPct": {"fsKey":"necklineDepth","type":"percent","min":20,"max":40},
+        "necklineWidthPct": {"fsKey":"necklineWidth","type":"percent","min":10,"max":50},
+        "lengthBonusPct": {"fsKey":"lengthBonus","type":"percent","min":-4,"max":60},
+        "fitWaist": {"fsKey":"fitWaist","type":"boolean"},
+        "waistEasePct": {"fsKey":"waistEase","type":"percent","min":8,"max":40},
+        "hipsEasePct": {"fsKey":"hipsEase","type":"percent","min":8,"max":30}
+      }
+    },
+    {
+      "designId": "simon", "family": "shirt", "name": "Button-down shirt", "package": "@freesewing/simon",
+      "source": "https://freesewing.dev/reference/designs/simon/",
+      "requiredMeasurements": ["biceps", "chest", "hips", "hpsToBust", "hpsToWaistBack", "neck", "shoulderSlope", "shoulderToShoulder", "shoulderToWrist", "waist", "waistToArmpit", "waistToHips", "wrist"],
+      "optionalMeasurements": ["highBust"],
+      "options": {
+        "chestEasePct": {"fsKey":"chestEase","type":"percent","min":-4,"max":35},
+        "waistEasePct": {"fsKey":"waistEase","type":"percent","min":10,"max":35},
+        "hipsEasePct": {"fsKey":"hipsEase","type":"percent","min":10,"max":35},
+        "boxPleat": {"fsKey":"boxPleat","type":"boolean"},
+        "buttons": {"fsKey":"buttons","type":"integer","min":4,"max":12},
+        "separateButtonPlacket": {"fsKey":"separateButtonPlacket","type":"boolean"},
+        "separateButtonholePlacket": {"fsKey":"separateButtonholePlacket","type":"boolean"},
+        "splitYoke": {"fsKey":"splitYoke","type":"boolean"},
+        "collarAngleDeg": {"fsKey":"collarAngle","type":"degrees","min":60,"max":130},
+        "collarStandWidthPct": {"fsKey":"collarStandWidth","type":"percent","min":3,"max":13},
+        "sleeveLengthBonusPct": {"fsKey":"sleeveLengthBonus","type":"percent","min":-40,"max":10}
+      }
+    },
+    {
+      "designId": "sophie", "family": "dress", "name": "Slip dress", "package": "@freesewing/sophie",
+      "source": "https://freesewing.dev/reference/designs/sophie/",
+      "requiredMeasurements": ["bustFront", "bustPointToUnderbust", "bustSpan", "hips", "hpsToBust", "hpsToWaistBack", "seat", "shoulderSlope", "shoulderToShoulder", "underbust", "waist", "waistToHips", "waistToKnee", "waistToSeat", "waistToUnderbust"],
+      "optionalMeasurements": [],
+      "options": {
+        "strapWidthPct": {"fsKey":"strapWidth","type":"percent","min":10,"max":100},
+        "necklineCoveragePct": {"fsKey":"necklineCoverage","type":"percent","min":0,"max":90},
+        "lengthBonusPct": {"fsKey":"lengthBonus","type":"percent","min":-50,"max":50},
+        "bustEasePct": {"fsKey":"bustEase","type":"percent","min":0,"max":25},
+        "underbustEasePct": {"fsKey":"underbustEase","type":"percent","min":0,"max":25},
+        "waistEasePct": {"fsKey":"waistEase","type":"percent","min":0,"max":25},
+        "hipsEasePct": {"fsKey":"hipsEase","type":"percent","min":0,"max":25},
+        "seatEasePct": {"fsKey":"seatEase","type":"percent","min":0,"max":25},
+        "armholeDropPct": {"fsKey":"armholeDrop","type":"percent","min":50,"max":90}
+      }
+    },
+    {
+      "designId": "carlita", "family": "coat", "name": "Long coat", "package": "@freesewing/carlita",
+      "source": "https://freesewing.dev/reference/designs/carlita/",
+      "requiredMeasurements": ["biceps", "bustSpan", "chest", "highBust", "hpsToBust", "hpsToWaistBack", "neck", "seat", "shoulderSlope", "shoulderToElbow", "shoulderToShoulder", "shoulderToWrist", "waist", "waistToArmpit", "waistToFloor", "waistToHips", "waistToSeat", "wrist"],
+      "optionalMeasurements": [],
+      "options": {
+        "chestEasePct": {"fsKey":"chestEase","type":"percent","min":-4,"max":35},
+        "waistEasePct": {"fsKey":"waistEase","type":"percent","min":8,"max":25},
+        "seatEasePct": {"fsKey":"seatEase","type":"percent","min":8,"max":25},
+        "lengthPct": {"fsKey":"length","type":"percent","min":35,"max":100},
+        "beltWidthPct": {"fsKey":"beltWidth","type":"percent","min":10,"max":20},
+        "sleeveBendDeg": {"fsKey":"sleeveBend","type":"degrees","min":0,"max":20},
+        "pocketWidthPct": {"fsKey":"pocketWidth","type":"percent","min":70,"max":120},
+        "pocketHeightPct": {"fsKey":"pocketHeight","type":"percent","min":0,"max":40},
+        "chestPocketAngleDeg": {"fsKey":"chestPocketAngle","type":"degrees","min":0,"max":6}
+      }
+    }
+  ]
+}

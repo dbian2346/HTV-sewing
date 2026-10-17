@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "measurementSystem": "metric",
+  "garment": { "designId": "titan", "family": "trousers", "name": "Trouser block" },
+  "measurements": {
+    "waist": 820, "waistBack": 420, "seat": 1040, "seatBack": 540,
+    "crossSeam": 760, "crossSeamFront": 350, "knee": 410,
+    "waistToFloor": 1050, "waistToHips": 200, "waistToKnee": 610,
+    "waistToSeat": 270, "waistToUpperLeg": 320
+  },
+  "options": { "waistEasePct": 2, "seatEasePct": 2, "kneeEasePct": 6, "fitKnee": false },
+  "construction": { "seamAllowanceMm": 10 },
+  "render": { "complete": true, "paperless": false },
+  "print": { "paper": "A4", "marginMm": 10, "overlapMm": 10, "calibrationSquareMm": 50 },
+  "fabric": { "structure": "woven", "stretchPct": 0, "shrinkagePct": 3, "directionalPrint": false }
+}
