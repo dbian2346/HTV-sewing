@@ -12,6 +12,7 @@ async function main() {
   await mkdir(resolve(output), { recursive: true });
   await writeFile(resolve(output, 'pattern.json'), JSON.stringify(pattern.draft, null, 2) + '\n');
   await writeFile(resolve(output, 'pattern.svg'), svg);
+  await writeFile(resolve(output, 'layout.json'), JSON.stringify(pattern.layout, null, 2) + '\n');
   await writeFile(resolve(output, 'pattern.pdf'), pdf);
   console.log(`Generated ${pattern.pieces.length} pieces in ${resolve(output)} (mm, ${paperSize ?? pattern.pdfOptions.paperSize ?? 'A4'}, 100% scale).`);
 }

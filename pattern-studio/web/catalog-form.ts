@@ -44,11 +44,10 @@ export function populateDesigns(select: HTMLSelectElement) {
   }
   for (const [, group] of [...groups].sort(([a], [b]) => a.localeCompare(b))) select.append(group);
 }
-function section(parent: HTMLElement, title: string, help: string): HTMLElement {
+function section(parent: HTMLElement, title: string): HTMLElement {
   const el = document.createElement('section'); el.className = 'form-section';
   const h = document.createElement('h3'); h.className = 'catalog-section-title'; h.textContent = title;
-  const p = document.createElement('p'); p.className = 'field-help'; p.textContent = help;
-  const fields = document.createElement('div'); fields.className = 'field-grid'; el.append(h, p, fields); parent.append(el); return fields;
+  const fields = document.createElement('div'); fields.className = 'field-grid'; el.append(h, fields); parent.append(el); return fields;
 }
 function field(parent: HTMLElement, path: string, title: string, unit: string, min?: number, max?: number, optional = false, placeholder = '') {
   const name = `catalog-${path.replaceAll('.', '-')}`; catalogPaths[path] = name; catalogNames[name] = title;
@@ -62,31 +61,9 @@ export function mountCatalogForm(parent: HTMLElement, id: string) {
   const design = catalogEntries.find(d => d.designId === id)!;
   parent.replaceChildren(); for (const key of Object.keys(catalogPaths)) delete catalogPaths[key];
   for (const key of Object.keys(catalogNames)) delete catalogNames[key];
-  const required = section(parent, 'Required measurements', 'Enter your actual measurements. Required values are never inferred from your photo.');
+  const required = section(parent, 'Your measurements');
   const descriptions = measurementsData.measurements as Record<string, { description: string; unit: string }>;
   for (const key of design.requiredMeasurements) field(required, `measurements.${key}`, label(key), descriptions[key]?.unit ?? 'mm', 0.01, key === 'shoulderSlope' ? 60 : 5000);
-  if (design.optionalMeasurements.length) {
-    const optional = section(parent, 'Optional measurements', 'Leave blank to use the design’s own measurement handling.');
-    for (const key of design.optionalMeasurements) field(optional, `measurements.${key}`, label(key), descriptions[key]?.unit ?? 'mm', 0.01, 5000, true);
-  }
-  const options = section(parent, 'Design options', 'Blank / Design default keeps FreeSewing’s default. Percentage values are percentage points. Conditional options remain visible for this untested integration.');
-  for (const [key, binding] of Object.entries(design.options)) {
-    const path = `options.${key}`, title = binding.label ?? label(key);
-    if (binding.type === 'boolean' || binding.type === 'enum') {
-      const name = `catalog-${path.replaceAll('.', '-')}`; catalogPaths[path] = name; catalogNames[name] = title;
-      const outer = document.createElement('label'); outer.className = 'field'; outer.textContent = title;
-      const select = document.createElement('select'); select.name = name; select.className = 'catalog-choice'; select.append(new Option('Design default', ''));
-      const values = binding.type === 'boolean' ? [true, false] : binding.values ?? [];
-      for (const [i, value] of values.entries()) select.append(new Option(binding.type === 'boolean' ? value ? 'Yes' : 'No' : String(value), String(i)));
-      select.dataset.values = JSON.stringify(values); outer.append(select); options.append(outer);
-    } else {
-      field(options, path, title, binding.type === 'percent' ? '%' : binding.type === 'degrees' ? '°' : '', binding.min, binding.max, true,
-        binding.default === undefined ? 'Design default' : `Default: ${binding.default}`);
-      if (binding.type === 'integer') options.lastElementChild!.querySelector('input')!.step = '1';
-    }
-  }
-  const finish = section(parent, 'Construction', 'Hem, fabric and assembly requirements are specific to the original design. See Sewing notes.');
-  field(finish, 'construction.seamAllowanceMm', 'Seam allowance', 'mm', 0, 30);
 }
 export function writeCatalogForm(form: HTMLFormElement, spec: CatalogSpec) {
   for (const [path, name] of Object.entries(catalogPaths)) {

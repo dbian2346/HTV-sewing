@@ -1,9 +1,10 @@
 import { build, context } from 'esbuild';
-import { mkdir, copyFile } from 'node:fs/promises';
+import { mkdir, copyFile, cp } from 'node:fs/promises';
 
 await import('./export-supported-designs.mjs');
 await mkdir('out', { recursive: true });
 await copyFile('web/index.html', 'out/index.html');
+await cp('web/assets', 'out/assets', { recursive: true });
 await copyFile('supported-designs.json', 'out/supported-designs.json');
 const options = {
   entryPoints: ['web/main.ts'], bundle: true, outdir: 'out',

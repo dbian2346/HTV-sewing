@@ -2,6 +2,8 @@ import { designs, i18n, annotationI18n, themePlugin, i18nPlugin } from '@pattern
 import { z } from 'zod';
 import { escapeXML } from '../svg.js';
 import type { VectorPattern, VectorPiece } from '../vector.js';
+import { layoutData, type LayoutData, type LayoutPiece } from '../layout.js';
+import { nativePartLayout, type LayoutNativePart } from './layout.js';
 
 const translate = (text: unknown, locale: string): string => {
   const raw = String(text), colon = raw.indexOf(':');
@@ -27,7 +29,7 @@ const commonSchema = z.strictObject({
 export type CatalogSpec = z.output<typeof commonSchema>;
 export interface CatalogPattern {
   designId: string; engine: 'FreeSewing'; engineVersion: string; verification: 'untested'; spec: CatalogSpec;
-  vector: VectorPattern; instructions: string[]; warnings: string[];
+  vector: VectorPattern; layout: LayoutData; instructions: string[]; warnings: string[];
 }
 export function validateCatalogSpec(input: unknown): CatalogSpec {
   const spec = commonSchema.parse(input), Constructor = designs[spec.garment.designId];
@@ -88,12 +90,14 @@ export function generateCatalogPattern(input: unknown): CatalogPattern {
   const svg = drafted.svg, defs = Object.values(svg.defs.list).join('\n');
   const cutlist = drafted.setStores[0]?.get('cutlist') ?? {};
   const pieces: VectorPiece[] = [];
+  const layoutPieces: LayoutPiece[] = [];
   for (const [id, layout] of Object.entries(svg.layout)) {
     const stack = drafted.stacks[id]; if (!stack || !layout.svg.trim()) continue;
     const width = stack.width + 12, height = stack.height + 24;
     if (![width, height, stack.topLeft.x, stack.topLeft.y].every(Number.isFinite) || Math.min(width, height) <= 0)
       throw new Error(`Invalid bounds for ${id}. Try another option or measurement set.`);
     const nativeParts = [...stack.parts], info = cutlist[nativeParts[0]?.name ?? id];
+    for (const part of nativeParts) if (!part.hidden) layoutPieces.push(...nativePartLayout(part, cutlist[part.name], id, spec.construction.seamAllowanceMm));
     const label = cutLabel(info), name = id.replaceAll('.', ' · ');
     const labelSize = Math.min(3, (width - 12) / Math.max(1, label.length * 0.6));
     const markup = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="freesewing" width="${width}mm" height="${height}mm" viewBox="0 0 ${width} ${height}">
@@ -110,7 +114,7 @@ export function generateCatalogPattern(input: unknown): CatalogPattern {
   const warnings = [...new Set([...logs.pattern.warn, ...logs.sets.flatMap(s => s.warn)])];
   const name = spec.garment.name ?? Constructor.designConfig.data.name;
   return { designId: spec.garment.designId, engine: 'FreeSewing', engineVersion: CATALOG_ENGINE_VERSION, verification: 'untested', spec,
-    vector: { title: `${name} - FreeSewing (untested)`, units: 'mm', pieces,
+    layout: layoutData(layoutPieces), vector: { title: `${name} - FreeSewing (untested)`, units: 'mm', pieces,
       legend: 'Native FreeSewing markings: allowance outlines, seam lines, grain and fold marks.',
       cuttingInstructions: 'Follow the material, CUT, FOLD and BIAS labels for each native pattern piece.',
       constructionNote: 'Untested design. Follow the original design instructions and make a fit sample.' },
@@ -125,12 +129,12 @@ export function generateCatalogPattern(input: unknown): CatalogPattern {
     ], warnings };
 }
 
-export interface NativeCutInfo { cutOnFold?: unknown; materials: Record<string, { cut: number; identical?: boolean; onFold?: boolean; onBias?: boolean }[]> }
+export interface NativeCutInfo { cutOnFold?: import('../geometry.js').Point[]; grain?: number; grainOrigin?: string; materials: Record<string, { cut: number; identical?: boolean; onFold?: boolean; onBias?: boolean }[]> }
 export interface NativeDraft {
   use(plugin: unknown, data?: unknown): NativeDraft; draft(): NativeDraft; render(): string;
   getLogs(): { pattern: { error: string[]; warn: string[] }; sets: { error: string[]; warn: string[] }[] };
   setStores: { get(key: string): Record<string, NativeCutInfo> }[];
-  stacks: Record<string, { width: number; height: number; topLeft: { x: number; y: number }; parts: Set<{ name: string }> }>;
+  stacks: Record<string, { width: number; height: number; topLeft: { x: number; y: number }; parts: Set<LayoutNativePart> }>;
   svg: { style: string; defs: { list: Record<string, string> }; layout: Record<string, { svg: string }> };
 }
 export interface NativeOption { bool?: boolean; pct?: number; deg?: number; count?: number; min?: number; max?: number; list?: (string | number | boolean)[] }

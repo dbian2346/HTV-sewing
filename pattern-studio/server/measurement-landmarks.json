@@ -1,0 +1,230 @@
+[
+  {
+    "key": "head",
+    "name": "Head circumference",
+    "landmark": "Around head above eyebrows and ears at widest part of occiput",
+    "unit": "mm"
+  },
+  {
+    "key": "neck",
+    "name": "Neck circumference",
+    "landmark": "Circumference at neck base directly above clavicles",
+    "unit": "mm"
+  },
+  {
+    "key": "chest",
+    "name": "Chest circumference",
+    "landmark": "Horizontal circumference around fullest part of chest across shoulder blades",
+    "unit": "mm"
+  },
+  {
+    "key": "highBust",
+    "name": "High bust",
+    "landmark": "Circumference around torso directly under armpits, above bust mound",
+    "unit": "mm"
+  },
+  {
+    "key": "highBustFront",
+    "name": "High bust front",
+    "landmark": "Front arc from side seam to side seam across upper chest above bust",
+    "unit": "mm"
+  },
+  {
+    "key": "bustFront",
+    "name": "Bust front",
+    "landmark": "Front arc between side seams across apex/fullest point of bust",
+    "unit": "mm"
+  },
+  {
+    "key": "bustPointToUnderbust",
+    "name": "Bust point to underbust",
+    "landmark": "Vertical distance from bust apex down along curve to inframammary fold",
+    "unit": "mm"
+  },
+  {
+    "key": "bustSpan",
+    "name": "Bust span",
+    "landmark": "Horizontal distance between left and right bust points (apex to apex)",
+    "unit": "mm"
+  },
+  {
+    "key": "underbust",
+    "name": "Underbust",
+    "landmark": "Horizontal circumference directly beneath breasts along inframammary crease",
+    "unit": "mm"
+  },
+  {
+    "key": "hpsToBust",
+    "name": "HPS to bust",
+    "landmark": "High Point Shoulder (neck-shoulder intersect) down to bust point",
+    "unit": "mm"
+  },
+  {
+    "key": "hpsToWaistFront",
+    "name": "HPS to waist front",
+    "landmark": "High Point Shoulder over bust apex down to front natural waistline",
+    "unit": "mm"
+  },
+  {
+    "key": "hpsToWaistBack",
+    "name": "HPS to waist back",
+    "landmark": "High Point Shoulder down across back curvature to back natural waistline",
+    "unit": "mm"
+  },
+  {
+    "key": "shoulderSlope",
+    "name": "Shoulder slope",
+    "landmark": "Angular or vertical drop from neck-shoulder intersection to outer acromion",
+    "unit": "deg"
+  },
+  {
+    "key": "shoulderToShoulder",
+    "name": "Shoulder to shoulder",
+    "landmark": "Horizontal cross-back distance between left and right acromion bone tips",
+    "unit": "mm"
+  },
+  {
+    "key": "waistToArmpit",
+    "name": "Waist to armpit",
+    "landmark": "Vertical distance along side seam from natural waist up to base of armpit",
+    "unit": "mm"
+  },
+  {
+    "key": "waistToUnderbust",
+    "name": "Waist to underbust",
+    "landmark": "Vertical distance from front natural waistline up to underbust crease",
+    "unit": "mm"
+  },
+  {
+    "key": "biceps",
+    "name": "Biceps circumference",
+    "landmark": "Circumference at fullest horizontal point of upper arm between shoulder and elbow",
+    "unit": "mm"
+  },
+  {
+    "key": "shoulderToElbow",
+    "name": "Shoulder to elbow",
+    "landmark": "Distance from shoulder acromion point down along arm to tip of olecranon (elbow)",
+    "unit": "mm"
+  },
+  {
+    "key": "shoulderToWrist",
+    "name": "Shoulder to wrist",
+    "landmark": "Total arm length from shoulder tip over elbow to wrist styloid bone",
+    "unit": "mm"
+  },
+  {
+    "key": "wrist",
+    "name": "Wrist circumference",
+    "landmark": "Circumference taken over distal styloid processes of radius and ulna",
+    "unit": "mm"
+  },
+  {
+    "key": "waist",
+    "name": "Waist circumference",
+    "landmark": "Horizontal circumference around narrowest torso level (natural waist)",
+    "unit": "mm"
+  },
+  {
+    "key": "waistBack",
+    "name": "Waist back",
+    "landmark": "Back arc from side seam to side seam across back natural waistline",
+    "unit": "mm"
+  },
+  {
+    "key": "waistToHips",
+    "name": "Waist to hips",
+    "landmark": "Vertical distance from natural waistline down along side seam to high hip level",
+    "unit": "mm"
+  },
+  {
+    "key": "waistToSeat",
+    "name": "Waist to seat",
+    "landmark": "Vertical distance from natural waistline down to level of fullest gluteal protrusion",
+    "unit": "mm"
+  },
+  {
+    "key": "hips",
+    "name": "Hips circumference",
+    "landmark": "Circumference around pelvic rim (high hips) across iliac crests",
+    "unit": "mm"
+  },
+  {
+    "key": "seat",
+    "name": "Seat circumference",
+    "landmark": "Full horizontal circumference around maximum projection of buttocks/gluteals",
+    "unit": "mm"
+  },
+  {
+    "key": "seatBack",
+    "name": "Seat back",
+    "landmark": "Back contour arc between side seams across fullest point of seat",
+    "unit": "mm"
+  },
+  {
+    "key": "crotchDepth",
+    "name": "Crotch depth",
+    "landmark": "Vertical distance from waistline down to level of perineal crotch line",
+    "unit": "mm"
+  },
+  {
+    "key": "crossSeam",
+    "name": "Cross seam",
+    "landmark": "Total crotch curve from center front waist down through perineum to center back waist",
+    "unit": "mm"
+  },
+  {
+    "key": "crossSeamFront",
+    "name": "Cross seam front",
+    "landmark": "Front crotch curve length from front center waistline to center crotch point",
+    "unit": "mm"
+  },
+  {
+    "key": "inseam",
+    "name": "Inseam",
+    "landmark": "Inside leg length from perineum/crotch fork along inner leg down to floor/ankle",
+    "unit": "mm"
+  },
+  {
+    "key": "upperLeg",
+    "name": "Upper leg circumference",
+    "landmark": "Circumference of thigh measured immediately below the gluteal fold",
+    "unit": "mm"
+  },
+  {
+    "key": "waistToUpperLeg",
+    "name": "Waist to upper leg",
+    "landmark": "Vertical distance from natural waist down to upper thigh circumference level",
+    "unit": "mm"
+  },
+  {
+    "key": "knee",
+    "name": "Knee circumference",
+    "landmark": "Circumference horizontally around center of patella with leg extended",
+    "unit": "mm"
+  },
+  {
+    "key": "waistToKnee",
+    "name": "Waist to knee",
+    "landmark": "Vertical distance along side seam from natural waist down to mid-patella level",
+    "unit": "mm"
+  },
+  {
+    "key": "waistToFloor",
+    "name": "Waist to floor",
+    "landmark": "Vertical side length from natural waist down to floor without shoes",
+    "unit": "mm"
+  },
+  {
+    "key": "ankle",
+    "name": "Ankle circumference",
+    "landmark": "Circumference at narrowest point of lower leg directly above malleoli",
+    "unit": "mm"
+  },
+  {
+    "key": "heel",
+    "name": "Heel circumference",
+    "landmark": "Diagonal circumference around back of calcaneus heel and front instep ankle crease",
+    "unit": "mm"
+  }
+]

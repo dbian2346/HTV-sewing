@@ -3,45 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#223e3a" />
+  <meta name="theme-color" content="#fff8f7" />
   <meta name="description" content="Upload inspiration, describe your measurements, and preview an automatically matched sewing pattern. Photo analysis with Gemini and automatic supported-design matching." />
-  <title>Pattern Studio — From photo to pattern</title>
+  <title>Sewberry — Inspiration</title>
   <link rel="stylesheet" href="/main.css" />
 </head>
-<body>
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="Pattern Studio home"><span class="brand-icon" aria-hidden="true">✂</span> pattern<span class="brand-light">studio</span><span class="beta">MVP</span></a>
-    <div class="header-note"><span class="status-dot"></span> Gemini photo analysis · key stays on the server</div>
-    <button class="text-button" id="help-button">Print guide <span aria-hidden="true">↗</span></button>
-  </header>
-  <main>
-    <section class="page-heading">
-      <div><div class="eyebrow">FROM INSPIRATION TO SOMETHING YOU CAN MAKE</div><h1 id="garment-title">Your photo. Your pattern.</h1><p id="garment-subtitle">Start with a reference. Add your measurements. We find the closest supported design.</p></div>
-
+<body class="onboarding-active">
+  <header class="phone-status" aria-hidden="true"><img src="/assets/img941.svg" alt=""><div><img src="/assets/imgNetworkSignalLight.svg" alt=""><img src="/assets/imgWiFiSignalLight.svg" alt=""><img src="/assets/imgBatteryLight.svg" alt=""></div></header>
+  <section id="onboarding" data-stage="welcome" aria-label="Welcome to Sewberry">
+    <div class="onboard-brand" aria-hidden="true"><span class="berry-crop"><img src="/assets/onboard-berry.png" alt=""></span><img class="mini-wordmark" src="/assets/onboard-wordmark.png" alt=""></div>
+    <button id="onboard-back" class="text-button" aria-label="Back">←</button>
+    <section data-onboard-page="welcome" class="onboard-welcome">
+      <img class="machine-hero" src="/assets/onboard-machine.svg" alt="Pink sewing machine">
+      <h1 tabindex="-1">Your next <span>creation</span><br>starts here</h1>
+      <p class="onboard-subtitle">Turn the clothes you love into sewing<br>patterns made just for your body.</p>
+      <button id="get-started" class="primary-button">Get started <img src="/assets/onboard-arrow.svg" alt=""><img class="button-art" src="/assets/onboard-button-highlight.svg" alt=""></button>
+      <button id="demo-sign-in" class="text-button">I already have an account — <span>Sign In</span></button>
     </section>
-    <ol class="flow-steps" aria-label="Photo-to-pattern steps"><li id="step-photo" class="active"><span>01</span> Add a photo</li><li id="step-analysis"><span>02</span> Review the analysis</li><li id="step-measure"><span>03</span> Add measurements</li><li id="step-pattern"><span>04</span> See your pattern</li></ol>
+    <section data-onboard-page="guest" class="onboard-guest" hidden>
+      <div class="berry-hero berry-crop"><img src="/assets/onboard-berry.png" alt="Sewberry strawberry mascot"></div>
+      <h1 tabindex="-1">Welcome to</h1><img class="large-wordmark" src="/assets/onboard-wordmark.png" alt="Sewberry">
+      <p class="onboard-subtitle">Save your measurements and keep your sewing<br>creations happily in one place.</p>
+      <div class="demo-providers"><button class="provider apple" disabled><img src="/assets/onboard-apple.png" alt="">Continue with Apple</button><button class="provider google" disabled><img src="/assets/onboard-google.png" alt="">Continue with Google</button><button class="provider email" disabled><img src="/assets/onboard-email.svg" alt="">Continue with email</button></div>
+      <div class="guest-divider"><span>or</span></div><button id="continue-guest" class="text-button">Explore as a guest</button>
+      <p class="demo-note">Demo · Registration is unavailable</p>
+    </section>
+    <section data-onboard-page="intro" class="onboard-intro" hidden>
+      <div class="mannequin-hero"><img src="/assets/onboard-mannequin.svg" alt="Dress form with measuring tape"></div>
+      <h1 tabindex="-1">Let's make it <span>yours.</span></h1>
+      <p class="onboard-subtitle">Add a few measurements so every pattern is cut<br>to fit your unique, beautiful silhouette.</p>
+      <div class="intro-points"><div><span class="blue"><img src="/assets/onboard-timer.svg" alt=""></span><strong>Only takes 2 minutes</strong></div><div><span class="pink"><img src="/assets/onboard-lock.svg" alt=""></span><strong>Kept in your guest session</strong></div><div><span class="yellow"><img src="/assets/onboard-sliders.svg" alt=""></span><strong>Adjust or edit anytime</strong></div></div>
+      <div class="intro-action"><button id="add-measurements" class="primary-button"><img src="/assets/onboard-ruler.svg" alt="">Add my measurements <img src="/assets/onboard-next.svg" alt=""></button><img class="star1" src="/assets/onboard-star1.svg" alt=""><img class="star2" src="/assets/onboard-star2.svg" alt=""><img class="star3" src="/assets/onboard-star3.svg" alt=""></div>
+    </section>
+    <section data-onboard-page="method" class="onboard-method" hidden>
+      <div class="mannequin-hero"><img src="/assets/onboard-mannequin.svg" alt="Dress form with measuring tape"></div><h1 tabindex="-1">Your measurements</h1>
+      <button id="choose-manual" class="secondary-button">Enter manually →</button><button id="choose-body-photo" class="primary-button"><img src="/assets/imgContainer3.svg" alt="">Use a photo →</button>
+    </section>
+    <section data-onboard-page="manual" class="onboard-form" hidden>
+      <h1 id="profile-title" tabindex="-1">Measurements</h1>
+      <form id="profile-form"><div class="field-grid"><label class="field">Chest<div class="input-wrap"><input id="profile-chest" type="number" min="20" max="250" step="any" required><span>cm</span></div></label><label class="field">Natural waist<div class="input-wrap"><input id="profile-waist" type="number" min="20" max="250" step="any" required><span>cm</span></div></label><label class="field">Full hips<div class="input-wrap"><input id="profile-seat" type="number" min="20" max="250" step="any" required><span>cm</span></div></label></div><button id="profile-save" class="primary-button" type="submit">Save & Continue →</button></form>
+    </section>
+    <section data-onboard-page="body-photo" class="onboard-form" hidden>
+      <h1 tabindex="-1">Photo measurements</h1>
+      <form id="body-photo-form"><label class="field">Your height<div class="input-wrap"><input id="body-height" type="number" min="50" max="250" step="any" required><span>cm</span></div></label><div class="body-photo-card"><div class="body-camera-preview"><video id="body-camera-video" aria-label="Live camera preview" autoplay muted playsinline hidden></video><output id="body-camera-countdown" role="status" aria-live="polite" aria-label="Seconds until photo" hidden></output></div><div id="body-camera-controls" hidden><button type="button" id="capture-body-frame" class="primary-button" disabled>Capture in 10s</button><div><button type="button" id="switch-body-camera" class="text-button">Switch camera</button><button type="button" id="cancel-body-camera" class="text-button">Cancel</button></div></div><img id="body-photo-preview" alt="Your full-body measurement reference" hidden><p>Stand upright, head and feet in frame.</p><button type="button" id="capture-body-photo" class="secondary-button camera-button"><img src="/assets/imgContainer3.svg" alt="">Take Photo</button><button type="button" id="upload-body-photo" class="secondary-button upload-button"><img src="/assets/imgContainer4.svg" alt="">Upload Photo</button><input id="body-photo-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp"></div><button id="estimate-body" type="submit" class="primary-button">Estimate measurements</button><p class="photo-disclosure">Photo sent to Gemini · Estimates need review</p><button id="body-photo-manual" class="text-button" type="button">Enter manually instead</button></form>
+    </section>
+    <p id="onboard-error" role="alert"></p>
+  </section>
+  <main id="studio-main">
+    <ol class="flow-steps" aria-label="Photo-to-pattern steps">
+      <li class="step-connector" aria-hidden="true"><img src="/assets/imgGroup6.svg" alt=""></li>
+      <li id="step-photo" class="active"><button data-screen="photo"><img src="/assets/imgHeartButton.svg" alt="">Inspiration</button></li>
+      <li id="step-analysis"><button data-screen="customize"><img src="/assets/imgHeartButton.svg" alt="">Customize</button></li>
+      <li id="step-measure"><button data-screen="measure"><img src="/assets/imgHeartButton.svg" alt="">Measurements</button></li>
+      <li id="step-pattern"><button data-screen="pattern"><img src="/assets/imgHeartButton.svg" alt="">Pattern</button></li>
+    </ol>
+    <section class="page-heading"><h1 id="screen-title">Inspiration</h1><p id="screen-description">Upload a photo of clothing you love — from your camera roll, a fitting room snapshot, or a Pinterest pin.</p><div hidden><h2 id="garment-title"></h2><p id="garment-subtitle"></p></div></section>
     <section class="photo-intake" aria-labelledby="photo-heading">
       <div class="photo-upload">
         <img id="reference-preview" alt="Your uploaded garment reference" hidden>
-        <div id="upload-placeholder"><span aria-hidden="true">↥</span><h2 id="photo-heading">Start with your inspiration</h2><p>A clear garment photo, ideally showing the full shape.</p></div>
-        <label class="secondary-button" for="reference-photo">Choose a photo</label>
-        <input id="reference-photo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="photo-file-help">
-        <p id="photo-file-help">JPG, PNG or WebP · up to 8 MB</p>
+        <div id="upload-placeholder"><div class="garment-icon"><span class="sparkle"><img src="/assets/imgContainer5.svg" alt=""></span><span class="little-star"><img src="/assets/imgContainer6.svg" alt=""></span><div class="hanger"><i></i><img src="/assets/imgContainer7.svg" alt=""></div></div><h2 id="photo-heading">add garment photo</h2></div>
+        <button class="secondary-button camera-button" id="take-photo"><img src="/assets/imgContainer3.svg" alt="">Take Photo</button>
+        <label class="secondary-button upload-button" for="reference-photo"><img src="/assets/imgContainer4.svg" alt="">Upload Photo</label>
+        <input class="sr-only" id="reference-photo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="photo-file-help">
+        <p id="photo-file-help" class="sr-only">JPG, PNG or WebP · up to 8 MB</p>
       </div>
       <div class="photo-intake-copy">
-        <span class="eyebrow">A PATTERN THAT STARTS WITH WHAT YOU SEE</span><h2>Let the photo lead.</h2>
-        <p>Gemini describes the garment’s shape, details and construction, then uses your measurements to find and draft a supported pattern.</p>
         <label class="photo-notes-label" for="photo-notes">What would you like to make?</label><textarea id="photo-notes" maxlength="2000" placeholder="Describe the garment in the photo, or a detail you want to change."></textarea>
-        <div class="prototype-note"><strong>Photo analysis with Gemini</strong><p>Analyze sends your photo and notes to Google Gemini. Your measurements are validated locally when you draft; they are not inferred from your photo. Photos are not saved by this app.</p></div>
-        <button class="primary-button" id="analyze-photo" disabled>Analyze my photo <span aria-hidden="true">↗</span></button>
-        <p id="photo-status" role="status" aria-live="polite">Choose a reference photo to begin.</p>
+        <button class="primary-button" id="analyze-photo" disabled>Analyze my photo <span aria-hidden="true">→</span></button>
+
       </div>
     </section>
-    <section id="analysis-card" class="analysis-card" aria-labelledby="analysis-heading" hidden><div><span class="eyebrow">GEMINI GARMENT ANALYSIS</span><h2 id="analysis-heading">What’s in your reference</h2><p id="analysis-summary"></p><ul id="analysis-features" class="feature-chips"></ul><p class="field-help">The garment description is stored before any catalog design is selected. Enter your actual measurements below.</p></div><div class="analysis-unknowns"><h3>Still needs your input</h3><ul id="analysis-unknowns"></ul></div></section>
+    <aside class="photo-tips"><div class="tip-copy"><span class="tip-bulb"><img src="/assets/imgContainer8.svg" alt=""></span><p><strong>For best drafting accuracy:</strong> flat-lay garments or front-facing mirror photos with good lighting give the cleanest seam extraction.</p></div><div class="tip-tags"><span><img src="/assets/imgContainer9.svg" alt="">Flat lay / hanger</span><span><img src="/assets/imgContainer9.svg" alt="">Clear lighting</span><span><img src="/assets/imgContainer10.svg" alt="">Wrinkled heap</span></div></aside>
+    <p id="photo-status" role="status" aria-live="polite"></p>
+    <div class="error-panel" id="errors" role="alert" hidden></div>
+    <div class="assistant-label" id="assistant-label" hidden><span>♡</span><strong>sewberry</strong> just now</div>
+    <section id="analysis-card" class="analysis-card" aria-labelledby="analysis-heading" hidden><div><h2 id="analysis-heading">What’s in your reference</h2><p id="analysis-summary"></p><ul id="analysis-features" class="feature-chips"></ul><p class="field-help">The garment description is stored before any catalog design is selected. Enter your actual measurements below.</p></div><div class="analysis-unknowns"><h3>Still needs your input</h3><ul id="analysis-unknowns"></ul></div></section>
+    <div class="customize-actions"><button id="continue-measurements" class="primary-button">Your measurements <span>→</span></button><button id="edit-inspiration" class="text-button">Edit photo & notes</button></div>
     <section id="match-result" class="match-result" aria-live="polite" hidden><span class="eyebrow">AUTOMATIC CATALOG MATCH</span><h2 id="matched-name"></h2><p id="matched-reason"></p><p id="matched-differences" class="field-help"></p></section>
     <div class="workspace">
       <aside id="pattern-settings" class="settings-card" aria-label="Your measurements and preferences" hidden>
-        <div class="card-heading"><h2>Your measurements & preferences</h2><span class="unit-tag">ALL IN MM</span></div>
+        <div class="card-heading"><h2>Made to measure</h2><span class="unit-tag">MILLIMETERS (MM)</span></div><span id="measurement-source" class="estimate-tag" hidden>Photo estimates · Review before drafting</span><div class="measurement-method"><span>Manual</span><button type="button" id="open-photo-measurements">Use a photo</button></div>
         <input id="design-select" type="hidden" value="gathered_skirt"><p id="design-description" hidden></p>
         <form id="pattern-form" novalidate>
           <div id="gathered-fields">
@@ -49,11 +90,13 @@
             <div class="field-grid">
               <label class="field">Waist circumference<div class="input-wrap"><input name="waist" type="number" min="200" max="5000" step="any" value="720" required><span>mm</span></div></label>
               <label class="field">Hip circumference<div class="input-wrap"><input name="hip" type="number" min="200" max="5000" step="any" value="980" required><span>mm</span></div></label>
-            </div><p class="field-help">Measure your natural waist and the fullest part of your hips.</p>
+              <label class="field">Finished length<div class="input-wrap"><input name="length" type="number" min="1" max="2000" step="any" value="600" required><span>mm</span></div></label>
+            </div>
           </section>
+          <!-- Keep the matched design and construction values for drafting, without exposing extra settings. -->
+          <div hidden>
           <section class="form-section"><div class="section-heading"><span class="section-number">02</span><h3>Skirt design</h3></div>
             <div class="field-grid">
-              <label class="field">Finished length<div class="input-wrap"><input name="length" type="number" min="1" max="2000" step="any" value="600" required><span>mm</span></div></label>
               <label class="field">Fullness ratio<div class="input-wrap"><input name="fullnessRatio" type="number" min="1" max="5" step="any" value="2" required><span>×</span></div></label>
             </div><p class="field-help">Length includes the waistband and ruffle. Fullness is relative to your waist.</p>
             <div class="toggle-row"><div><label for="ruffle-enabled">Add a gathered ruffle</label><p>A little extra movement at the hem</p></div><label class="switch"><input type="checkbox" id="ruffle-enabled" checked><span class="switch-track"></span></label></div>
@@ -77,15 +120,15 @@
             </div><p class="field-help">Check your actual elastic. A 2× ratio means it can comfortably stretch to twice its joined length.</p></details>
           </section>
           </div>
+          </div>
           <div id="freesewing-fields" hidden></div>
           <div id="catalog-fields" hidden></div>
         </form>
-        <div class="photo-generate"><button id="generate-from-photo" class="primary-button">Draft my pattern <span aria-hidden="true">↗</span></button><p class="field-help">Your reference is matched automatically. Add the measurements needed for that design, then draft your pattern.</p></div>
+        <div class="photo-generate"><button id="generate-from-photo" class="primary-button">Generate Pattern Pieces <span aria-hidden="true">→</span></button></div>
       </aside>
       <section class="result-column" aria-label="Generated pattern">
-        <div class="error-panel" id="errors" role="alert" hidden></div>
         <div class="preview-card">
-          <div class="preview-heading"><div class="tabs" role="tablist" aria-label="Pattern views"><button id="tab-pattern" class="tab active" role="tab" aria-selected="true" aria-controls="panel-pattern" data-tab="pattern">Pattern preview</button><button id="tab-spec" class="tab" role="tab" aria-selected="false" aria-controls="panel-spec" data-tab="spec" tabindex="-1">JSON specification</button><button id="tab-instructions" class="tab" role="tab" aria-selected="false" aria-controls="panel-instructions" data-tab="instructions" tabindex="-1">Sewing notes</button></div><span id="draft-status" class="draft-status">Waiting for a photo</span></div>
+          <div class="preview-heading"><div class="tabs" role="tablist" aria-label="Pattern views"><button id="tab-pattern" class="tab active" role="tab" aria-selected="true" aria-controls="panel-pattern" data-tab="pattern">Pieces</button><button id="tab-spec" class="tab" role="tab" aria-selected="false" aria-controls="panel-spec" data-tab="spec" tabindex="-1">Specification</button><button id="tab-instructions" class="tab" role="tab" aria-selected="false" aria-controls="panel-instructions" data-tab="instructions" tabindex="-1">Cutting Steps</button></div><span id="draft-status" class="draft-status">Waiting for a photo</span></div>
           <div id="panel-pattern" role="tabpanel" aria-labelledby="tab-pattern">
             <div class="preview-toolbar"><label class="sr-only" for="piece-select">Preview piece</label><select id="piece-select"><option value="all">All pieces</option></select><div class="zoom-controls"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">Fit</span><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-fit">Fit</button></div></div>
             <div id="piece-summary" class="piece-summary"></div>
@@ -99,8 +142,10 @@
         <section class="export-card"><div class="export-top"><div><h2>Ready for the cutting table?</h2><p>Full-scale patterns, a calibration square, and room to line things up.</p></div><span class="scale-badge">1:1 SCALE</span></div><div class="export-controls"><label class="field paper-field">Paper size<select id="paper-size"><option value="A4">A4 · 210 × 297 mm</option><option value="Letter">US Letter · 8.5 × 11 in</option></select></label><button id="download-svg" disabled class="secondary-button download-button">↓ <span>Download SVG</span></button><button id="download-pdf" disabled class="primary-button download-button">↓ <span>Download PDF</span></button></div><div class="print-reminder"><span class="info-icon">i</span> Print at <strong>100% / Actual Size</strong>. Check the 50 × 50 mm square before cutting.</div><div id="export-message" role="status" class="export-message"></div></section>
       </section>
     </div>
-    <footer class="page-footer"><span>MADE TO MEASURE. READY TO MAKE.</span><span>74 FreeSewing entries + gathered skirt · Millimetres throughout</span></footer>
+    <div class="layout-download" id="layout-download" hidden><button id="download-layout" class="secondary-button download-button" disabled>↓ <span>Download layout JSON</span></button></div>
   </main>
+  <nav class="bottom-nav" aria-label="Main navigation"><button id="nav-home" class="selected"><img src="/assets/imgContainer.svg" alt="">Home</button><button disabled title="Not available in the MVP"><img src="/assets/imgContainer1.svg" alt="">Projects</button><button disabled title="Not available in the MVP"><img src="/assets/imgContainer2.svg" alt="">Profile</button></nav>
+  <button id="help-button" class="print-guide-link text-button">Print guide ↗</button>
   <dialog id="print-guide"><div class="dialog-heading"><span class="eyebrow">A QUICK PRINT CHECK</span><button id="close-guide" class="text-button" aria-label="Close print guide">✕</button></div><h2>Good patterns start<br>with the right scale.</h2><ol><li>Choose A4 or US Letter to match your paper.</li><li>Download the PDF and print the first page at <strong>100% / Actual Size</strong>. Disable Fit or Shrink.</li><li>Measure the calibration square: it must be <strong>50 × 50 mm</strong> between line centers.</li><li>Print the remaining pages at the same scale. Trim the white margins and align the repeated crosses in the <strong>10 mm overlap</strong>.</li><li>Assemble each piece by row and column, then cut along the solid line. Cut every labeled fabric piece once on a single layer.</li></ol><p>SVG is for previewing and vector editing. Use the tiled PDF for printing on standard paper.</p><button id="guide-done" class="primary-button">Got it</button></dialog>
   <script type="module" src="/main.js"></script>
 </body>

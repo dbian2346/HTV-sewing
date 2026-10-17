@@ -1,4 +1,6 @@
 import './style.css';
+import { mountOnboarding } from './onboarding.js';
+import { profileValue, type MeasurementProfile } from './measurement-profile.js';
 import { generateStudioPattern as generatePattern, exportStudioSVG as exportSVG, exportStudioPDF as exportPDF,
   planTiles, PAPER_SIZES, formatMM, isPenelopeSpec, isFreeSewingSpec, type StudioPattern as Pattern,
   type StudioSpec as PatternSpec, type PenelopeSpec, type CatalogSpec } from '../src/index.js';
@@ -16,6 +18,7 @@ const json = $<HTMLTextAreaElement>('json-input');
 const ruffle = $<HTMLInputElement>('ruffle-enabled');
 const pdfButton = $<HTMLButtonElement>('download-pdf');
 const svgButton = $<HTMLButtonElement>('download-svg');
+const layoutButton = $<HTMLButtonElement>('download-layout');
 const designSelect = $<HTMLInputElement>('design-select');
 mountFittedForm($('freesewing-fields'));
 let retainedCatalogSpec: CatalogSpec | null = null;
@@ -32,6 +35,7 @@ let photoMatch: { name: string; explanation: string; differences: string[]; conf
 let analysisRevision = 0;
 let analysisAbort: AbortController | null = null;
 let analyzing = false;
+let measurementProfile: MeasurementProfile | null = null;
 const generatePhotoButton = $<HTMLButtonElement>('generate-from-photo');
 const fieldPaths: Record<string, string> = {
   'measurements.waist': 'waist', 'measurements.hip': 'hip',
@@ -198,11 +202,13 @@ function render(p: Pattern) {
   if (isFreeSewingSpec(p.spec) && !isPenelopeSpec(p.spec)) retainedCatalogSpec = p.spec;
   if (isPenelopeSpec(p.spec)) retainedFittedSpec = p.spec;
   svgButton.disabled = false;
+  layoutButton.disabled = false; $('layout-download').hidden = false;
   updatePageCount(); renderPreview();
 }
 function invalidate() {
   draftRevision++;
   pattern = null; svgButton.disabled = pdfButton.disabled = true;
+  layoutButton.disabled = true; $('layout-download').hidden = true;
   $('svg-container').hidden = true; $('canvas-empty').hidden = false;
   $('piece-summary').textContent = ''; $('seam-checks').replaceChildren();
   $('draft-status').textContent = 'Add your measurements';
@@ -212,6 +218,7 @@ function invalidate() {
   $('instructions').replaceChildren(); $('export-message').textContent = '';
   $('construction-callout').textContent = 'Generate a pattern to see its construction notes.';
   pageCount = null;
+  refreshPhoneNavigation();
 }
 form.addEventListener('submit', e => e.preventDefault());
 form.addEventListener('input', () => {
@@ -279,19 +286,24 @@ function download(bytes: BlobPart, mime: string, name: string) {
 svgButton.addEventListener('click', () => {
   if (!pattern) return;
     download(exportSVG(pattern), 'image/svg+xml', `${pattern.designId}.svg`);
-  $('export-message').textContent = 'SVG downloaded with all pattern pieces and annotations.';
+  $('export-message').textContent = 'SVG downloaded.';
+});
+layoutButton.addEventListener('click', () => {
+  if (!pattern) return;
+  download(JSON.stringify(pattern.layout, null, 2), 'application/json', `${pattern.designId}-layout.json`);
+  $('export-message').textContent = 'Layout JSON downloaded.';
 });
 pdfButton.addEventListener('click', async () => {
   const snapshot = pattern; if (!snapshot) return;
   const revision = draftRevision;
   const paperSize = paper.value as 'A4' | 'Letter';
   pdfButton.disabled = true; pdfButton.querySelector('span')!.textContent = 'Preparing PDF…';
-  $('export-message').textContent = `Preparing your ${pageCount}-sheet ${paperSize} pattern…`;
+  $('export-message').textContent = '';
   try {
     const bytes = await exportPDF(snapshot, { paperSize });
     if (revision !== draftRevision || snapshot !== pattern || paperSize !== paper.value) throw new Error('The pattern changed during export. Download again to use your latest settings.');
     download(new Uint8Array(bytes).buffer, 'application/pdf', `${snapshot.designId}-${paperSize}.pdf`);
-    $('export-message').textContent = `${paperSize} PDF downloaded. Print the calibration page first at 100%.`;
+    $('export-message').textContent = 'PDF downloaded.';
   } catch (error) { $('export-message').textContent = error instanceof Error ? error.message : 'PDF export failed. Please try again.'; }
   finally { pdfButton.querySelector('span')!.textContent = 'Download PDF'; pdfButton.disabled = !pattern || pageCount === null || pageCount > 500; }
 });
@@ -313,7 +325,75 @@ function setFlowStep(id: string) {
     if (step === id) $(`step-${step}`).setAttribute('aria-current', 'step');
     else $(`step-${step}`).removeAttribute('aria-current');
   }
+  if (id === 'photo') showScreen('photo');
+  if (id === 'measure') showScreen('customize');
+  if (id === 'pattern') showScreen('pattern');
 }
+type PhoneScreen = 'photo' | 'customize' | 'measure' | 'pattern';
+function showScreen(screen: PhoneScreen) {
+  document.body.dataset.screen = screen;
+  const titles = { photo: 'Inspiration', customize: 'Customize', measure: 'Measurements', pattern: 'Pattern & Cutting Layout' };
+  $('screen-title').textContent = titles[screen];
+  $('screen-description').textContent = screen === 'photo'
+    ? 'Upload a photo of clothing you love — from your camera roll, a fitting room snapshot, or a Pinterest pin.'
+    : '';
+  document.title = `Sewberry — ${titles[screen]}`;
+  refreshPhoneNavigation();
+  $('continue-measurements').hidden = false;
+  $('pattern-settings').hidden = screen !== 'measure';
+  $('measurement-source').hidden = measurementProfile?.source !== 'photo_estimate';
+  window.scrollTo(0, 0);
+  if (screen === 'pattern') requestAnimationFrame(fitPreview);
+}
+function refreshPhoneNavigation() {
+  const screen = (document.body.dataset.screen ?? 'photo') as PhoneScreen;
+  const order: PhoneScreen[] = ['photo', 'customize', 'measure', 'pattern'];
+  document.querySelectorAll<HTMLButtonElement>('[data-screen]').forEach(button => {
+    const target = button.dataset.screen as PhoneScreen;
+    button.disabled = false;
+    const li = button.closest('li');
+    li?.classList.toggle('active', target === screen);
+    li?.classList.toggle('done', order.indexOf(target) < order.indexOf(screen));
+    if (target === screen) li?.setAttribute('aria-current', 'step');
+    else li?.removeAttribute('aria-current');
+  });
+}
+document.querySelectorAll<HTMLButtonElement>('[data-screen]').forEach(button => {
+  button.addEventListener('click', () => showScreen(button.dataset.screen as PhoneScreen));
+});
+$('continue-measurements').addEventListener('click', () => showScreen('measure'));
+$('edit-inspiration').addEventListener('click', () => showScreen('photo'));
+$('nav-home').addEventListener('click', () => showScreen('photo'));
+$('take-photo').addEventListener('click', () => {
+  const input = $<HTMLInputElement>('reference-photo');
+  input.setAttribute('capture', 'environment'); input.click();
+});
+document.querySelector('label[for="reference-photo"]')!.addEventListener('click', () => {
+  $('reference-photo').removeAttribute('capture');
+});
+// Keep the existing numeric fields and validation, with Figma's phone stepper controls.
+function enhanceMeasurementFields() {
+  form.querySelectorAll<HTMLInputElement>('.input-wrap input[type="number"]').forEach(input => {
+    const wrap = input.parentElement!;
+    if (wrap.querySelector('.stepper')) return;
+    for (const delta of [-1, 1]) {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'stepper'; button.textContent = delta < 0 ? '−' : '+';
+      button.setAttribute('aria-label', `${delta < 0 ? 'Decrease' : 'Increase'} ${catalogNames[input.name] ?? fittedNames[input.name] ?? fieldNames[input.name] ?? input.name}`);
+      button.addEventListener('click', () => {
+        if (input.disabled) return;
+        const value = Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : Number(input.min) || 0;
+        const step = input.step === 'any' ? (wrap.querySelector('span')?.textContent === 'mm' ? 5 : .1) : Number(input.step) || 1;
+        const next = Math.round((value + delta * step) * 1000) / 1000;
+        input.value = String(Math.max(input.min ? Number(input.min) : -Infinity, Math.min(input.max ? Number(input.max) : Infinity, next)));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      if (delta < 0) wrap.prepend(button); else wrap.append(button);
+    }
+  });
+}
+new MutationObserver(enhanceMeasurementFields).observe(form, { childList: true, subtree: true });
+enhanceMeasurementFields();
 function formMeasurements() {
   const paths = designSelect.value === 'gathered_skirt' ? fieldPaths : designSelect.value === 'penelope' ? fittedPaths : catalogPaths;
   const measurements: Record<string, number> = {};
@@ -351,25 +431,28 @@ function resetPhotoResult() {
   $('canvas-empty').textContent = 'Your pattern will appear here after you add a photo and measurements.';
   $('draft-status').textContent = 'Waiting for a photo';
   $('analyze-photo').textContent = 'Analyze my photo';
+  $('photo-status').textContent = '';
   json.value = ''; $('json-message').textContent = ''; updateIntentJSON(); setFlowStep('photo');
 }
 $<HTMLInputElement>('reference-photo').addEventListener('change', e => {
   resetPhotoResult(); referenceFile = null;
+  document.body.classList.remove('has-photo');
   if (referenceURL) URL.revokeObjectURL(referenceURL);
   referenceURL = null;
   $<HTMLImageElement>('reference-preview').removeAttribute('src');
   $('reference-preview').hidden = true; $('upload-placeholder').hidden = false;
   $<HTMLButtonElement>('analyze-photo').disabled = true;
   const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) { $('photo-status').textContent = 'Choose a photo to begin.'; return; }
+  if (!file) { $('photo-status').textContent = ''; return; }
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024 || file.size === 0) {
     $('photo-status').textContent = 'Choose a JPG, PNG or WebP image between 1 byte and 8 MB.'; return;
   }
   referenceFile = file; referenceURL = URL.createObjectURL(file);
   const image = $<HTMLImageElement>('reference-preview');
   image.onload = () => { image.hidden = false; $('upload-placeholder').hidden = true;
+    document.body.classList.add('has-photo');
     $<HTMLButtonElement>('analyze-photo').disabled = false;
-    $('photo-status').textContent = `${file.name} is ready. Analyze sends the image and notes to Gemini.`; };
+    $('photo-status').textContent = ''; };
   image.onerror = () => { referenceFile = null; image.hidden = true; $('upload-placeholder').hidden = false;
     $('photo-status').textContent = 'This image could not be opened. Please choose another file.'; };
   image.src = referenceURL;
@@ -387,7 +470,7 @@ $('analyze-photo').addEventListener('click', async () => {
   const revision = analysisRevision, file = referenceFile;
   const controller = new AbortController(); analysisAbort = controller; analyzing = true;
   const button = $<HTMLButtonElement>('analyze-photo'); button.disabled = true; button.textContent = 'Analyzing and matching…';
-  $('photo-status').textContent = 'Gemini is describing your reference and finding a supported design. This can take a minute.';
+  $('photo-status').textContent = '';
   $('draft-status').textContent = 'Analyzing photo…'; setFlowStep('analysis');
   try {
     const data = await new Promise<string>((resolve,reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]!); reader.onerror = () => reject(new Error('Could not read the image.')); reader.readAsDataURL(file); });
@@ -395,6 +478,7 @@ $('analyze-photo').addEventListener('click', async () => {
     if (revision !== analysisRevision) return;
     photoIntent = garmentIntentSchema.parse(result.intent);
     $('analysis-card').hidden = false;
+    $('assistant-label').hidden = false;
     $('analysis-heading').textContent = photoIntent.observations.category;
     $('analysis-summary').textContent = result.summary;
     for (const [id, values] of [['analysis-features', photoIntent.observations.visibleFeatures], ['analysis-unknowns', [...photoIntent.observations.unknownFeatures, ...(result.clarificationQuestions || [])]]] as const)
@@ -402,14 +486,16 @@ $('analyze-photo').addEventListener('click', async () => {
     if (result.status !== 'matched' || !result.pendingSpec || !result.sessionId || !result.match) {
       $('photo-status').textContent = result.status === 'unsupported' ? (result.explanation || 'No useful supported design matches this reference. Try another photo or describe the intended garment.') : 'Add the requested details in your notes, then analyze again.';
       $('draft-status').textContent = result.status === 'unsupported' ? 'No supported match' : 'More detail needed';
-      $<HTMLTextAreaElement>('intent-json').value = JSON.stringify(photoIntent,null,2); return;
+      $<HTMLTextAreaElement>('intent-json').value = JSON.stringify(photoIntent,null,2); showScreen('customize'); return;
     }
     photoSessionId = result.sessionId; photoMatch = result.match;
     writeForm(result.pendingSpec);
     // Pending specifications contain no body measurements. Restore only exact user-entered keys.
     const paths = designSelect.value === 'gathered_skirt' ? fieldPaths : designSelect.value === 'penelope' ? fittedPaths : catalogPaths;
     for (const [path,name] of Object.entries(paths)) if (path.startsWith('measurements.')) {
-      inputField(name).value = priorMeasurements[path.slice(13)] === undefined ? '' : String(priorMeasurements[path.slice(13)]);
+      const key = path.slice(13);
+      const value = priorMeasurements[key] ?? profileValue(measurementProfile, key, designSelect.value);
+      inputField(name).value = value === undefined ? '' : String(value);
     }
     if (designSelect.value === 'gathered_skirt') inputField('length').value = priorLength ? String(priorLength) : '';
     clearErrors(); invalidate(); generatePhotoButton.disabled = false;
@@ -417,7 +503,7 @@ $('analyze-photo').addEventListener('click', async () => {
     $('garment-title').textContent = 'Let’s make it yours.';
     $('garment-subtitle').textContent = 'Your photo has been matched automatically. Add the measurements needed to draft your pattern.';
     document.title = 'Pattern Studio — Add your measurements';
-    $('photo-status').textContent = 'Analysis ready. Enter the required measurements below; none were estimated from the photo.';
+    $('photo-status').textContent = '';
     $('canvas-empty').textContent = 'Add your measurements, then choose Draft my pattern.';
     $('draft-status').textContent = 'Waiting for measurements';
     json.value = ''; updateIntentJSON(); setFlowStep('measure');
@@ -434,7 +520,7 @@ $('photo-notes').addEventListener('input', () => {
   analysisAbort?.abort(); analysisRevision++; analyzing = false; photoSessionId = null; photoMatch = null;
   invalidate(); generatePhotoButton.disabled = true; $('match-result').hidden = true;
   $<HTMLButtonElement>('analyze-photo').disabled = !referenceFile; $('analyze-photo').textContent = 'Analyze my photo';
-  $('photo-status').textContent = 'Your notes changed. Analyze again to update the garment description and match.';
+  $('photo-status').textContent = 'Analyze again to apply your changes.';
 });
 function showMatch() {
   if (!photoMatch) return;
@@ -452,12 +538,24 @@ generatePhotoButton.addEventListener('click', async () => {
     if (revision !== draftRevision) throw new Error('Your inputs changed. Draft again to use the latest measurements.');
     const p = generatePattern(result.spec);
     writeForm(p.spec); render(p); photoIntent = result.intent; updateIntentJSON(); showMatch();
-    $('photo-status').textContent = 'Your reference was matched automatically. The draft uses the measurements you supplied.';
+    $('photo-status').textContent = '';
     setFlowStep('pattern');
   } catch (error) { invalidate(); showErrors(error); $('match-result').hidden = true; }
   finally { generatePhotoButton.disabled = !photoSessionId || analyzing; }
 });
 resetPhotoResult();
+const onboarding = mountOnboarding(profile => {
+  measurementProfile = profile;
+  if (photoSessionId) {
+    const paths = designSelect.value === 'gathered_skirt' ? fieldPaths : designSelect.value === 'penelope' ? fittedPaths : catalogPaths;
+    for (const [path, name] of Object.entries(paths)) if (path.startsWith('measurements.')) {
+      const value = profileValue(profile, path.slice(13), designSelect.value);
+      if (value !== undefined) inputField(name).value = String(value);
+    }
+    form.dispatchEvent(new Event('input', {bubbles:true})); showScreen('measure');
+  } else showScreen('photo');
+}, () => showScreen('measure'));
+$('open-photo-measurements').addEventListener('click', () => onboarding.editPhoto());
 fetch('/api/health').then(async response => {
   if (!response.ok) throw new Error('unavailable'); const status = await response.json();
   if (!status.configured) $('photo-status').textContent = 'Gemini is not configured. Add GEMINI_API_KEY to .env and restart npm run dev.';

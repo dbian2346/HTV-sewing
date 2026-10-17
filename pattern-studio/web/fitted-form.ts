@@ -9,10 +9,6 @@ const measurementLabels: Record<string, string> = {
   waist: 'Waist circumference', seat: 'Seat circumference', waistToHips: 'Waist to high hip',
   waistToSeat: 'Waist to full seat', waistToKnee: 'Waist to knee', waistBack: 'Back waist arc', seatBack: 'Back seat arc',
 };
-const optionLabels: Record<string, string> = {
-  curvedDarts: 'Curved darts', backVent: 'Back vent', nrOfDarts: 'Darts per half panel', waistband: 'Add a waistband',
-  lengthBonusPct: 'Body length adjustment', hemBonusPct: 'Hem taper', waistEasePct: 'Waist ease', seatEasePct: 'Seat ease',
-};
 export const fittedNames: Record<string, string> = {};
 export function fittedExample(): unknown {
   return { schemaVersion: 2, measurementSystem: 'metric', garment: { designId: 'penelope', family: 'skirt', name: 'Penelope pencil skirt' },
@@ -20,14 +16,13 @@ export function fittedExample(): unknown {
     options: { curvedDarts: true, backVent: true, nrOfDarts: 2, waistband: true, waistEasePct: 1, seatEasePct: 1, lengthBonusPct: 0, hemBonusPct: 0 },
     construction: { seamAllowanceMm: 10 } };
 }
-function section(parent: HTMLElement, number: string, title: string, help: string) {
+function section(parent: HTMLElement, number: string, title: string) {
   const el = document.createElement('section'); el.className = 'form-section';
   const heading = document.createElement('div'); heading.className = 'section-heading';
   const num = document.createElement('span'); num.className = 'section-number'; num.textContent = number;
   const h = document.createElement('h3'); h.textContent = title; heading.append(num, h);
   const grid = document.createElement('div'); grid.className = 'field-grid';
-  const p = document.createElement('p'); p.className = 'field-help'; p.textContent = help;
-  el.append(heading, grid, p); parent.append(el); return grid;
+  el.append(heading, grid); parent.append(el); return grid;
 }
 function field(parent: HTMLElement, path: string, title: string, unit: string, min: number, max: number, optional = false) {
   const name = `fs-${path.replaceAll('.', '-')}`;
@@ -39,25 +34,8 @@ function field(parent: HTMLElement, path: string, title: string, unit: string, m
   const suffix = document.createElement('span'); suffix.textContent = unit; wrap.append(input, suffix); label.append(wrap); parent.append(label);
 }
 export function mountFittedForm(parent: HTMLElement) {
-  const measurements = section(parent, '01', 'Penelope measurements', 'Seat is the fullest part of your buttocks, not the high hip. Vertical measurements start at your natural waist.');
+  const measurements = section(parent, '01', 'Your measurements');
   for (const key of [...design.requiredMeasurements]) field(measurements, `measurements.${key}`, measurementLabels[key]!, 'mm', 50, 2500);
-  const arcs = section(parent, '02', 'Optional back arcs', 'Measure the back half from side seam to side seam. Supply both arcs, or leave both empty for FreeSewing’s default balance.');
-  for (const key of design.optionalMeasurements) field(arcs, `measurements.${key}`, measurementLabels[key]!, 'mm', 50, 2500, true);
-  const options = section(parent, '03', 'Supported variations', 'Length adjusts the waist-to-knee body length. The waistband adds height above it. Taper changes the hem shape; ease values are percentage points.');
-  for (const [key, binding] of Object.entries(design.options)) {
-    if (binding.type === 'boolean') {
-      const name = `fs-options-${key}`; fittedPaths[`options.${key}`] = name; fittedNames[name] = optionLabels[key]!;
-      const label = document.createElement('label'); label.className = 'fitted-checkbox';
-      const input = document.createElement('input'); input.type = 'checkbox'; input.name = name;
-      label.append(input, document.createTextNode(optionLabels[key]!)); options.append(label);
-    } else {
-      const numeric = binding as { min: number; max: number; type: string };
-      field(options, `options.${key}`, optionLabels[key]!, binding.type === 'integer' ? '' : '%', numeric.min, numeric.max);
-      if (binding.type === 'integer') (options.lastElementChild!.querySelector('input')!).step = '1';
-    }
-  }
-  const finish = section(parent, '04', 'Seam allowance', 'Penelope drafts its own hem turn-up. This variation uses a back zipper and a waistband with no button overlap. Cut quantities and fold edges are design-specific.');
-  field(finish, 'construction.seamAllowanceMm', 'Seam allowance', 'mm', 0, 30);
 }
 export function readFittedForm(form: HTMLFormElement, retained: PenelopeSpec | null) {
   const spec = JSON.parse(JSON.stringify(retained ?? penelopeSchema.parse(fittedExample()))) as PenelopeSpec;

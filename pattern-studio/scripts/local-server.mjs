@@ -7,7 +7,8 @@ const assets = { '/': ['index.html','text/html'], '/index.html': ['index.html','
 export async function startLocalServer() {
   const server = createServer(async (req,res) => {
     if (req.url?.startsWith('/api/')) { await handlePhotoAPI(req,res); return; }
-    const asset = assets[req.url?.split('?')[0]];
+    const pathname = req.url?.split('?')[0];
+    const asset = assets[pathname] ?? (/^\/assets\/[a-zA-Z0-9_-]+\.(svg|png)$/.test(pathname ?? '') ? [pathname.slice(1), pathname.endsWith('.png') ? 'image/png' : 'image/svg+xml'] : null);
     if (!asset || !['GET','HEAD'].includes(req.method)) { res.writeHead(404); res.end('Not found'); return; }
     try {
       const bytes = await readFile(new URL(`../out/${asset[0]}`, import.meta.url));

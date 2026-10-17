@@ -5,6 +5,8 @@ import { distance, formatMM, type Point, type Primitive } from '../geometry.js';
 import type { VectorPattern, VectorPiece } from '../vector.js';
 import type { FSOp, FSPath, FSPart, CutInfo } from './types.js';
 import { trimStraightOffsetLoops } from './offset-joins.js';
+import { layoutData, type LayoutData, type LayoutPiece } from '../layout.js';
+import { nativePartLayout } from './layout.js';
 
 // Penelope's back reads a side-seam length stored by the front. Make that draft order explicit.
 const RegisteredPenelope = new Design({ ...Penelope.designConfig, parts: [front, back, waistband] });
@@ -12,6 +14,7 @@ export const PENELOPE_VERSION = '3.1.0';
 export interface PenelopePattern {
   designId: 'penelope'; engine: 'FreeSewing'; engineVersion: string; spec: PenelopeSpec;
   vector: VectorPattern;
+  layout: LayoutData;
   dimensions: { bodyLength: number; finishedLength: number; easedWaist: number; closedWaist: number;
     waistbandFinishedHeight: number; frontSideSeam: number; backSideSeam: number };
   checks: { name: string; differenceMm: number; toleranceMm: number }[];
@@ -103,6 +106,7 @@ export function generatePenelope(input: unknown): PenelopePattern {
     throw new Error(`${check.name} differ by ${formatMM(check.differenceMm)} mm (limit ${check.toleranceMm} mm). This variation is outside the verified drafting tolerance.`);
 
   const pieces: VectorPiece[] = [];
+  const layoutPieces: LayoutPiece[] = [];
   for (const id of ['penelope.front', 'penelope.back', 'penelope.waistband']) {
     const part = parts[id]!; if (part.hidden) continue;
     const rp = render.stacks[id]?.parts[0];
@@ -113,6 +117,8 @@ export function generatePenelope(input: unknown): PenelopePattern {
     const cutQuantity = info.materials.fabric.reduce((n, cut) => n + cut.cut, 0);
     const onFold = !!info.cutOnFold, mirrored = cutQuantity === 2;
     const primitives: Primitive[] = [];
+    let cuttingOps: FSOp[] | undefined;
+    let cuttingPathId = 'sa';
     for (const [pathId, path] of Object.entries(rp.paths)) {
       if (path.hidden || pathId.includes('scalebox')) continue;
       if (path.attributes.list.transform?.length) throw new Error(`Unimplemented path transform in ${id}/${pathId}.`);
@@ -120,6 +126,7 @@ export function generatePenelope(input: unknown): PenelopePattern {
       const style = pathId === 'sa' ? 'cut' : pathId === 'seam' ? 'stitch' : pathId === 'outline'
         ? (spec.construction.seamAllowanceMm > 0 ? 'stitch' : 'cut') : pathId === 'hem' || fold ? 'fold' : 'annotation';
       primitives.push({ kind: 'path', d: pathData(pathId === 'sa' ? trimStraightOffsetLoops(path.ops) : path.ops, dx, dy), style });
+      if (style === 'cut') { cuttingOps = pathId === 'sa' ? trimStraightOffsetLoops(path.ops) : path.ops; cuttingPathId = pathId; }
       if (fold || grain) {
         arrows(primitives, path.ops, dx, dy);
         const first = path.ops.find(op => op.to)!.to!, last = path.ops.filter(op => op.to).at(-1)!.to!;
@@ -133,6 +140,7 @@ export function generatePenelope(input: unknown): PenelopePattern {
       const cutting = part.paths.leftSide!.clone().join(part.paths.bottom!).join(part.paths.sideSeam!)
         .join(part.paths.waistSA!).close();
       primitives.push({ kind: 'path', style: 'cut', d: pathData(cutting.ops, dx, dy) });
+      cuttingOps = cutting.ops; cuttingPathId = 'assembled-cutting-outline';
     }
     if (id === 'penelope.waistband') {
       const center = part.points.TR!.x / 2 + dx;
@@ -158,10 +166,12 @@ export function generatePenelope(input: unknown): PenelopePattern {
     label(`CUT ${cutQuantity}${onFold ? ' ON FOLD' : mirrored ? ' MIRRORED' : ''}`, 7);
     label(`FreeSewing ${PENELOPE_VERSION} - ${spec.construction.seamAllowanceMm} mm SA`, 13, 2.8);
     pieces.push({ id, name, width, height, cutQuantity, onFold, mirrored, primitives });
+    layoutPieces.push(...nativePartLayout({name:id,paths:rp.paths}, info, id, spec.construction.seamAllowanceMm,
+      cuttingOps ? {pathId:cuttingPathId,ops:cuttingOps} : undefined).map(piece=>({...piece,name})));
   }
   const waistbandFinishedHeight = o.waistband ? (parts['penelope.waistband']!.points.TR!.x / 2) : 0;
   return { designId: 'penelope', engine: 'FreeSewing', engineVersion: PENELOPE_VERSION, spec,
-    vector: { title: 'Penelope fitted skirt - FreeSewing', units: 'mm', pieces,
+    layout: layoutData(layoutPieces), vector: { title: 'Penelope fitted skirt - FreeSewing', units: 'mm', pieces,
       cuttingInstructions: 'Follow CUT / FOLD labels: front on fold, back mirrored, optional band on fold.',
       constructionNote: 'Back zipper; waistband meets edge-to-edge. Make a fit sample before final fabric.' },
     dimensions: { bodyLength, finishedLength: bodyLength + waistbandFinishedHeight, easedWaist, closedWaist,
