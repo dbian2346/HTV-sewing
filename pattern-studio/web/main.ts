@@ -1,4 +1,6 @@
 import './style.css';
+import { mountQuickMeasurements, lengthKey, type QuickDesign } from './quick-measurements.js';
+import { mountFabricControls } from './fabric.js';
 import { mountOnboarding } from './onboarding.js';
 import { profileValue, type MeasurementProfile } from './measurement-profile.js';
 import { generateStudioPattern as generatePattern, exportStudioSVG as exportSVG, exportStudioPDF as exportPDF,
@@ -6,9 +8,9 @@ import { generateStudioPattern as generatePattern, exportStudioSVG as exportSVG,
   type StudioSpec as PatternSpec, type PenelopeSpec, type CatalogSpec } from '../src/index.js';
 import { ZodError } from 'zod';
 import { garmentIntentSchema, type GarmentIntent } from '../src/photo-intent.js';
-import { mountFittedForm, readFittedForm, fittedPaths, fittedNames } from './fitted-form.js';
+import { mountFittedForm, readFittedForm, fittedExample, fittedPaths, fittedNames } from './fitted-form.js';
 
-import { catalogEntries, mountCatalogForm, readCatalogForm, writeCatalogForm, catalogPaths, catalogNames } from './catalog-form.js';
+import { catalogEntries, catalogExample, mountCatalogForm, readCatalogForm, writeCatalogForm, catalogPaths, catalogNames } from './catalog-form.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const form = $<HTMLFormElement>('pattern-form');
@@ -36,6 +38,8 @@ let analysisRevision = 0;
 let analysisAbort: AbortController | null = null;
 let analyzing = false;
 let measurementProfile: MeasurementProfile | null = null;
+const fabricControls = mountFabricControls();
+const generateFabricButton = $<HTMLButtonElement>('generate-from-fabric');
 const generatePhotoButton = $<HTMLButtonElement>('generate-from-photo');
 const fieldPaths: Record<string, string> = {
   'measurements.waist': 'waist', 'measurements.hip': 'hip',
@@ -54,8 +58,42 @@ const fieldNames: Record<string, string> = {
 };
 const inputField = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
 const n = (name: string) => inputField(name).valueAsNumber;
+const quickMeasurements = mountQuickMeasurements($('quick-measurements'));
+let estimatedMeasurementKeys: string[] = [];
+function currentQuickDesign():QuickDesign {
+  if(designSelect.value === 'gathered_skirt')return {family:'skirt',required:['waist','hip'],baseline:{waist:760,hip:1020}};
+  const baseline = designSelect.value === 'penelope' ? fittedExample() as PenelopeSpec : catalogExample(designSelect.value);
+  const entry = catalogEntries.find(entry=>entry.designId===designSelect.value)!;
+  return {family:entry.family,required:designSelect.value==='penelope'?Object.keys(baseline.measurements):entry.requiredMeasurements,baseline:baseline.measurements};
+}
+function configureQuickMeasurements(preferProfile=false) {
+  const design=currentQuickDesign(),values:Record<string,number>={};
+  const paths=designSelect.value==='gathered_skirt'?fieldPaths:designSelect.value==='penelope'?fittedPaths:catalogPaths;
+  for(const [path,name] of Object.entries(paths))if(path.startsWith('measurements.')){
+    const value=inputField(name).valueAsNumber;if(Number.isFinite(value))values[path.slice(13)]=value;
+  }
+  for(const key of ['shoulderToShoulder','chest','waist']){
+    const value=profileValue(measurementProfile,key,designSelect.value);if((preferProfile||values[key]===undefined)&&value!==undefined)values[key]=value;
+  }
+  const length=designSelect.value==='gathered_skirt'?n('length'):values[lengthKey(design)??''];
+  quickMeasurements.set(design,values,Number.isFinite(length)?length:undefined);
+}
+function syncQuickMeasurements() {
+  const known={...measurementProfile?.measurements};
+  if(designSelect.value==='gathered_skirt'&&known.seat!==undefined)known.hip=known.seat;
+  const completed=quickMeasurements.complete(known,measurementProfile?.height_mm);
+  estimatedMeasurementKeys=completed.estimated;
+  $('quick-estimate-note').hidden=!estimatedMeasurementKeys.length;
+  const paths=designSelect.value==='gathered_skirt'?fieldPaths:designSelect.value==='penelope'?fittedPaths:catalogPaths;
+  for(const [key,value] of Object.entries(completed.measurements)){
+    const name=paths[`measurements.${key}`];if(name)inputField(name).value=String(value);
+  }
+  if(designSelect.value==='gathered_skirt')inputField('length').value=String(quickMeasurements.entered().length!*10);
+}
+
 
 function readForm() {
+  syncQuickMeasurements();
   if (!['gathered_skirt', 'penelope'].includes(designSelect.value)) return readCatalogForm(form, retainedCatalogSpec!);
   if (designSelect.value === 'penelope') return readFittedForm(form, retainedFittedSpec);
   return {
@@ -86,6 +124,7 @@ function writeForm(spec: PatternSpec) {
     if (!free) ruffle.checked = spec.garment.ruffle.enabled;
   }
   setDesignVisibility();
+  configureQuickMeasurements();
 }
 function setDesignVisibility() {
   const fitted = designSelect.value === 'penelope', gathered = designSelect.value === 'gathered_skirt';
@@ -119,14 +158,19 @@ function showErrors(error: unknown) {
   const issues = error instanceof ZodError ? error.issues : [{ path: [], message: error instanceof Error ? error.message : 'Could not generate the pattern.' }];
   for (const issue of issues) {
     const name = (designSelect.value === 'penelope' ? fittedPaths : designSelect.value === 'gathered_skirt' ? fieldPaths : catalogPaths)[issue.path.join('.')];
+    const key=issue.path[0]==='measurements'?String(issue.path[1]):issue.path.join('.')==='garment.length'?'length':'';
+    const quickInput=[...$('quick-measurements').querySelectorAll<HTMLInputElement>('input')].find(input=>input.dataset.measurement===key);
+    const unit=quickInput?.dataset.measurement==='shoulderSlope'?'°':'cm';
+    const divisor=unit==='cm'?10:1;
+    const issueMessage=quickInput&&'minimum' in issue?`Enter at least ${Number(issue.minimum)/divisor} ${unit}.`:quickInput&&'maximum' in issue?`Enter at most ${Number(issue.maximum)/divisor} ${unit}.`:issue.message;
     const li = document.createElement('li');
-    li.textContent = `${name ? `${catalogNames[name] ?? fittedNames[name] ?? fieldNames[name]}: ` : ''}${issue.message}`;
+    li.textContent = `${name ? `${catalogNames[name] ?? fittedNames[name] ?? fieldNames[name]}: ` : ''}${issueMessage}`;
     list.append(li);
-    if (name) {
-      const field = inputField(name), label = field.closest('.field, .fitted-checkbox')!;
+    if (quickInput || name) {
+      const field = quickInput ?? inputField(name!), label = field.closest('.field, .fitted-checkbox')!;
       label.classList.add('field-error'); field.setAttribute('aria-invalid', 'true');
       const message = document.createElement('span'); message.className = 'field-error-text';
-      message.id = `error-${name}`; message.textContent = issue.message;
+      message.id = `error-${quickInput?.name ?? name}`; message.textContent = issueMessage;
       label.append(message); field.setAttribute('aria-describedby', message.id);
       const details = field.closest('details'); if (details) details.open = true;
     }
@@ -204,6 +248,8 @@ function render(p: Pattern) {
   svgButton.disabled = false;
   layoutButton.disabled = false; $('layout-download').hidden = false;
   updatePageCount(); renderPreview();
+  updateMapPieces();
+  if(estimatedMeasurementKeys.length)$('draft-status').textContent='Estimated fit';
 }
 function invalidate() {
   draftRevision++;
@@ -218,6 +264,7 @@ function invalidate() {
   $('instructions').replaceChildren(); $('export-message').textContent = '';
   $('construction-callout').textContent = 'Generate a pattern to see its construction notes.';
   pageCount = null;
+  updateMapPieces();
   refreshPhoneNavigation();
 }
 form.addEventListener('submit', e => e.preventDefault());
@@ -290,7 +337,9 @@ svgButton.addEventListener('click', () => {
 });
 layoutButton.addEventListener('click', () => {
   if (!pattern) return;
-  download(JSON.stringify(pattern.layout, null, 2), 'application/json', `${pattern.designId}-layout.json`);
+  const fabric = fabricControls.read();
+  if (!fabric) { showScreen('fabric'); return; }
+  download(JSON.stringify({ ...pattern.layout, fabric, measurement_basis: { estimated_keys: estimatedMeasurementKeys, method: estimatedMeasurementKeys.length ? 'standard_proportions' : measurementProfile?.source ?? 'manual' } }, null, 2), 'application/json', `${pattern.designId}-layout.json`);
   $('export-message').textContent = 'Layout JSON downloaded.';
 });
 pdfButton.addEventListener('click', async () => {
@@ -305,7 +354,7 @@ pdfButton.addEventListener('click', async () => {
     download(new Uint8Array(bytes).buffer, 'application/pdf', `${snapshot.designId}-${paperSize}.pdf`);
     $('export-message').textContent = 'PDF downloaded.';
   } catch (error) { $('export-message').textContent = error instanceof Error ? error.message : 'PDF export failed. Please try again.'; }
-  finally { pdfButton.querySelector('span')!.textContent = 'Download PDF'; pdfButton.disabled = !pattern || pageCount === null || pageCount > 500; }
+  finally { pdfButton.querySelector('span')!.textContent = 'Download PDF & Cutting Guide'; pdfButton.disabled = !pattern || pageCount === null || pageCount > 500; }
 });
 const guide = $<HTMLDialogElement>('print-guide');
 $('help-button').addEventListener('click', () => {
@@ -320,7 +369,7 @@ $('guide-done').addEventListener('click', () => guide.close());
 guide.addEventListener('click', e => { if (e.target === guide) { const r = guide.getBoundingClientRect();
   if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) guide.close(); } });
 function setFlowStep(id: string) {
-  for (const step of ['photo', 'analysis', 'measure', 'pattern']) {
+  for (const step of ['photo', 'analysis', 'fabric', 'pattern']) {
     $(`step-${step}`).classList.toggle('active', step === id);
     if (step === id) $(`step-${step}`).setAttribute('aria-current', 'step');
     else $(`step-${step}`).removeAttribute('aria-current');
@@ -329,10 +378,12 @@ function setFlowStep(id: string) {
   if (id === 'measure') showScreen('customize');
   if (id === 'pattern') showScreen('pattern');
 }
-type PhoneScreen = 'photo' | 'customize' | 'measure' | 'pattern';
+type PhoneScreen = 'photo' | 'customize' | 'measure' | 'fabric' | 'pattern';
 function showScreen(screen: PhoneScreen) {
   document.body.dataset.screen = screen;
-  const titles = { photo: 'Inspiration', customize: 'Customize', measure: 'Measurements', pattern: 'Pattern & Cutting Layout' };
+  const connector = document.querySelector<HTMLImageElement>('.step-connector img')!;
+  connector.src = screen === 'fabric' || screen === 'pattern' ? `/assets/${screen}-imgGroup6.svg` : '/assets/imgGroup6.svg';
+  const titles = { photo: 'Inspiration', customize: 'Customize', measure: 'Customize', fabric: 'Fabric', pattern: 'Pattern & Cutting Layout' };
   $('screen-title').textContent = titles[screen];
   $('screen-description').textContent = screen === 'photo'
     ? 'Upload a photo of clothing you love — from your camera roll, a fitting room snapshot, or a Pinterest pin.'
@@ -340,26 +391,54 @@ function showScreen(screen: PhoneScreen) {
   document.title = `Sewberry — ${titles[screen]}`;
   refreshPhoneNavigation();
   $('continue-measurements').hidden = false;
-  $('pattern-settings').hidden = screen !== 'measure';
+  $('pattern-settings').hidden = screen !== 'measure' && screen !== 'customize';
   $('measurement-source').hidden = measurementProfile?.source !== 'photo_estimate';
   window.scrollTo(0, 0);
   if (screen === 'pattern') requestAnimationFrame(fitPreview);
 }
 function refreshPhoneNavigation() {
   const screen = (document.body.dataset.screen ?? 'photo') as PhoneScreen;
-  const order: PhoneScreen[] = ['photo', 'customize', 'measure', 'pattern'];
+  const order: PhoneScreen[] = ['photo', 'customize', 'fabric', 'pattern'];
+  const activeScreen = screen === 'measure' ? 'customize' : screen;
+  generateFabricButton.disabled = !photoSessionId || analyzing;
   document.querySelectorAll<HTMLButtonElement>('[data-screen]').forEach(button => {
     const target = button.dataset.screen as PhoneScreen;
     button.disabled = false;
     const li = button.closest('li');
-    li?.classList.toggle('active', target === screen);
-    li?.classList.toggle('done', order.indexOf(target) < order.indexOf(screen));
-    if (target === screen) li?.setAttribute('aria-current', 'step');
+    li?.classList.toggle('active', target === activeScreen);
+    li?.classList.toggle('done', order.indexOf(target) < order.indexOf(activeScreen));
+    if (target === activeScreen) li?.setAttribute('aria-current', 'step');
     else li?.removeAttribute('aria-current');
   });
 }
 document.querySelectorAll<HTMLButtonElement>('[data-screen]').forEach(button => {
   button.addEventListener('click', () => showScreen(button.dataset.screen as PhoneScreen));
+});
+function updateMapPieces() {
+  $('map-piece-count').textContent = pattern ? `${pattern.pieces.length} piece templates` : 'No pieces yet';
+  $('pattern-piece-list').replaceChildren(...(pattern?.pieces ?? []).map(piece => {
+    const li = document.createElement('li');
+    li.textContent = `${piece.name} · ${piece.cuttingLabel ?? `Cut ${piece.cutQuantity}`} · ${formatMM(piece.width)} × ${formatMM(piece.height)} mm`;
+    return li;
+  }));
+  if (!pattern) $('pattern-piece-list').textContent = 'Generate a pattern to see its pieces.';
+}
+const pieceDialog = $<HTMLDialogElement>('piece-list-dialog');
+$('open-piece-list').addEventListener('click', () => { updateMapPieces(); pieceDialog.showModal(); });
+$('close-piece-list').addEventListener('click', () => pieceDialog.close());
+$('map-fullscreen').addEventListener('click', () => {
+  const map = document.querySelector<HTMLElement>('.pattern-map')!;
+  const expanded = map.classList.toggle('expanded');
+  $('map-fullscreen').textContent = expanded ? 'Close Full Screen' : '🔍 Full Screen';
+  requestAnimationFrame(fitPreview);
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.querySelector('.pattern-map.expanded')) $('map-fullscreen').click();
+});
+$('open-cutting-steps').addEventListener('click', () => {
+  $<HTMLDetailsElement>('pattern-tools').open = true;
+  activateTab($<HTMLButtonElement>('tab-instructions'));
+  $('pattern-tools').scrollIntoView({behavior:'smooth',block:'start'});
 });
 $('continue-measurements').addEventListener('click', () => showScreen('measure'));
 $('edit-inspiration').addEventListener('click', () => showScreen('photo'));
@@ -395,6 +474,7 @@ function enhanceMeasurementFields() {
 new MutationObserver(enhanceMeasurementFields).observe(form, { childList: true, subtree: true });
 enhanceMeasurementFields();
 function formMeasurements() {
+  syncQuickMeasurements();
   const paths = designSelect.value === 'gathered_skirt' ? fieldPaths : designSelect.value === 'penelope' ? fittedPaths : catalogPaths;
   const measurements: Record<string, number> = {};
   for (const [path, name] of Object.entries(paths)) {
@@ -464,7 +544,7 @@ interface AnalysisResult {
 }
 $('analyze-photo').addEventListener('click', async () => {
   if (!referenceFile || analyzing) return;
-  const priorMeasurements = photoIntent ? formMeasurements() : {};
+  const priorMeasurements = photoIntent ? Object.fromEntries(Object.entries(quickMeasurements.entered()).filter(([key,value])=>key!=='length'&&Number.isFinite(value)).map(([key,value])=>[key,value*10])) : {};
   const priorLength = photoIntent?.preferences.finishedLengthMm;
   resetPhotoResult();
   const revision = analysisRevision, file = referenceFile;
@@ -498,6 +578,7 @@ $('analyze-photo').addEventListener('click', async () => {
       inputField(name).value = value === undefined ? '' : String(value);
     }
     if (designSelect.value === 'gathered_skirt') inputField('length').value = priorLength ? String(priorLength) : '';
+    configureQuickMeasurements();
     clearErrors(); invalidate(); generatePhotoButton.disabled = false;
     $('pattern-settings').hidden = false; document.body.classList.remove('awaiting-photo');
     $('garment-title').textContent = 'Let’s make it yours.';
@@ -529,10 +610,13 @@ function showMatch() {
   $('matched-reason').textContent = `${photoMatch.explanation} Match confidence: ${photoMatch.confidence}.`;
   $('matched-differences').textContent = photoMatch.differences.join(' ');
 }
-generatePhotoButton.addEventListener('click', async () => {
-  if (!photoIntent || !photoSessionId) return;
+generatePhotoButton.addEventListener('click', () => { if(quickMeasurements.valid()) { syncQuickMeasurements(); showScreen('fabric'); } });
+generateFabricButton.addEventListener('click', async () => {
+  if (!photoIntent || !photoSessionId || generateFabricButton.disabled) return;
+  if (!quickMeasurements.valid(false)) { showScreen('measure'); quickMeasurements.valid(); return; }
+  if (!fabricControls.read()) return;
   clearErrors(); updateIntentJSON();
-  const revision = draftRevision; generatePhotoButton.disabled = true;
+  const revision = draftRevision; generatePhotoButton.disabled = generateFabricButton.disabled = true;
   try {
     const result = await apiPost<{ spec: PatternSpec; intent: GarmentIntent }>('/api/resolve', { sessionId: photoSessionId, settings: readForm() });
     if (revision !== draftRevision) throw new Error('Your inputs changed. Draft again to use the latest measurements.');
@@ -541,8 +625,9 @@ generatePhotoButton.addEventListener('click', async () => {
     $('photo-status').textContent = '';
     setFlowStep('pattern');
   } catch (error) { invalidate(); showErrors(error); $('match-result').hidden = true; }
-  finally { generatePhotoButton.disabled = !photoSessionId || analyzing; }
+  finally { generatePhotoButton.disabled = generateFabricButton.disabled = !photoSessionId || analyzing; }
 });
+configureQuickMeasurements();
 resetPhotoResult();
 const onboarding = mountOnboarding(profile => {
   measurementProfile = profile;
@@ -552,8 +637,9 @@ const onboarding = mountOnboarding(profile => {
       const value = profileValue(profile, path.slice(13), designSelect.value);
       if (value !== undefined) inputField(name).value = String(value);
     }
+    configureQuickMeasurements(true);
     form.dispatchEvent(new Event('input', {bubbles:true})); showScreen('measure');
-  } else showScreen('photo');
+  } else { configureQuickMeasurements(true); showScreen('photo'); }
 }, () => showScreen('measure'));
 $('open-photo-measurements').addEventListener('click', () => onboarding.editPhoto());
 fetch('/api/health').then(async response => {

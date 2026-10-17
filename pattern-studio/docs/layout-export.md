@@ -109,3 +109,9 @@ if any(not p["optimizer_ready"] for p in layout["pieces"]
 ```
 
 The exporter does not implement the Python optimizer, fabric UI, shrinkage compensation, or a packing algorithm.
+
+## Fabric settings in the phone UI
+
+The third navigation step is Fabric, with width in centimeters, length in meters, and a fabric type (including custom input). Layout JSON downloaded from the UI adds a separate `fabric` object with `width_mm`, `length_mm`, and `type` alongside the existing `pieces`. CLI and library exports retain the original piece-only contract. Fabric selection does not alter pattern ease or seam allowance.
+
+The Pattern screen uses the Figma efficiency card, map, piece list and download dock. It previews actual generated SVG pieces and keeps efficiency/remnant values pending until a layout optimizer supplies a result; it does not claim that pieces have been nested on the fabric. SVG, PDF, specification and cutting notes remain accessible.
