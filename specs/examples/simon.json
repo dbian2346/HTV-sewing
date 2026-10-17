@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "measurementSystem": "metric",
+  "garment": { "designId": "simon", "family": "shirt", "name": "Test button-down shirt" },
+  "measurements": {
+    "biceps": 340, "chest": 1000, "hips": 1010, "hpsToBust": 280,
+    "hpsToWaistBack": 450, "neck": 400, "shoulderSlope": 16,
+    "shoulderToShoulder": 450, "shoulderToWrist": 640,
+    "waist": 880, "waistToArmpit": 225, "waistToHips": 210, "wrist": 180
+  },
+  "options": { "chestEasePct": 18, "boxPleat": true, "buttons": 7 },
+  "construction": { "seamAllowanceMm": 10 },
+  "render": { "complete": true, "paperless": false },
+  "print": { "paper": "A4", "marginMm": 10, "overlapMm": 10, "calibrationSquareMm": 50 },
+  "fabric": { "structure": "woven", "stretchPct": 0, "shrinkagePct": 3, "directionalPrint": false }
+}

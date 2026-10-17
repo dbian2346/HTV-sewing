@@ -1,7 +1,7 @@
 {
   "catalogVersion": 1,
   "verifiedAgainst": "FreeSewing design reference, 2026-10-17",
-  "mappingStatus": "documented keys; package execution still required before production use",
+  "mappingStatus": "mapped keys and required measurements checked against FreeSewing 4.10.2; six synthetic SVG drafts pass, physical fit not tested",
   "optionConvention": "Input percentage points are divided by 100 before passing to FreeSewing options. Boolean, count, and degree values pass through unchanged. Omitted options use FreeSewing defaults.",
   "designs": [
     {
@@ -42,7 +42,7 @@
       "requiredMeasurements": ["biceps", "chest", "hips", "hpsToBust", "hpsToWaistBack", "neck", "shoulderSlope", "shoulderToShoulder", "shoulderToWrist", "waist", "waistToArmpit", "waistToHips", "wrist"],
       "optionalMeasurements": ["highBust"],
       "options": {
-        "chestEasePct": {"fsKey":"chestEase","type":"percent","min":-4,"max":35},
+        "chestEasePct": {"fsKey":"chestEase","type":"percent","min":5,"max":25},
         "bicepsEasePct": {"fsKey":"bicepsEase","type":"percent","min":0,"max":50},
         "sleeveLengthPct": {"fsKey":"sleeveLength","type":"percent","min":20,"max":100},
         "necklineDepthPct": {"fsKey":"necklineDepth","type":"percent","min":20,"max":40},
@@ -95,7 +95,7 @@
       "requiredMeasurements": ["biceps", "bustSpan", "chest", "highBust", "hpsToBust", "hpsToWaistBack", "neck", "seat", "shoulderSlope", "shoulderToElbow", "shoulderToShoulder", "shoulderToWrist", "waist", "waistToArmpit", "waistToFloor", "waistToHips", "waistToSeat", "wrist"],
       "optionalMeasurements": [],
       "options": {
-        "chestEasePct": {"fsKey":"chestEase","type":"percent","min":-4,"max":35},
+        "chestEasePct": {"fsKey":"chestEase","type":"percent","min":5,"max":20},
         "waistEasePct": {"fsKey":"waistEase","type":"percent","min":8,"max":25},
         "seatEasePct": {"fsKey":"seatEase","type":"percent","min":8,"max":25},
         "lengthPct": {"fsKey":"length","type":"percent","min":35,"max":100},

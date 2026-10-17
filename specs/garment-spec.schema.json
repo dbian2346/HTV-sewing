@@ -518,8 +518,8 @@
           "properties": {
             "chestEasePct": {
               "type": "number",
-              "minimum": -4,
-              "maximum": 35
+              "minimum": 5,
+              "maximum": 25
             },
             "bicepsEasePct": {
               "type": "number",
@@ -771,8 +771,8 @@
           "properties": {
             "chestEasePct": {
               "type": "number",
-              "minimum": -4,
-              "maximum": 35
+              "minimum": 5,
+              "maximum": 20
             },
             "waistEasePct": {
               "type": "number",

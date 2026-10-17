@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "measurementSystem": "metric",
+  "garment": { "designId": "sophie", "family": "dress", "name": "Test slip dress" },
+  "measurements": {
+    "bustFront": 500, "bustPointToUnderbust": 85, "bustSpan": 190,
+    "hips": 990, "hpsToBust": 270, "hpsToWaistBack": 430,
+    "seat": 1010, "shoulderSlope": 17, "shoulderToShoulder": 410,
+    "underbust": 790, "waist": 780, "waistToHips": 200,
+    "waistToKnee": 600, "waistToSeat": 250, "waistToUnderbust": 130
+  },
+  "options": { "bustEasePct": 5, "lengthBonusPct": 0 },
+  "construction": { "seamAllowanceMm": 10 },
+  "render": { "complete": true, "paperless": false },
+  "print": { "paper": "A4", "marginMm": 10, "overlapMm": 10, "calibrationSquareMm": 50 },
+  "fabric": { "structure": "woven", "stretchPct": 0, "shrinkagePct": 3, "directionalPrint": false }
+}

@@ -1,0 +1,10 @@
+{
+  "designId": "carlita",
+  "package": "@freesewing/carlita",
+  "packageVersion": "4.10.2",
+  "widthMm": 2005.88,
+  "heightMm": 1762.19,
+  "warnings": [
+    "Store.get(key) on key `sleevecapEase`, which is undefined"
+  ]
+}

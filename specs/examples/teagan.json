@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "measurementSystem": "metric",
+  "garment": { "designId": "teagan", "family": "knitTop", "name": "Test T-shirt" },
+  "measurements": {
+    "biceps": 310, "chest": 940, "hips": 990, "hpsToBust": 260,
+    "hpsToWaistBack": 430, "neck": 380, "shoulderSlope": 17,
+    "shoulderToShoulder": 420, "shoulderToWrist": 610,
+    "waist": 800, "waistToArmpit": 205, "waistToHips": 200, "wrist": 170
+  },
+  "options": { "chestEasePct": 12, "sleeveLengthPct": 35, "fitWaist": false },
+  "construction": { "seamAllowanceMm": 10 },
+  "render": { "complete": true, "paperless": false },
+  "print": { "paper": "A4", "marginMm": 10, "overlapMm": 10, "calibrationSquareMm": 50 },
+  "fabric": { "structure": "knit", "stretchPct": 25, "shrinkagePct": 3, "directionalPrint": false }
+}

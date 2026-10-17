@@ -1,0 +1,23 @@
+{
+  "name": "htv-freesewing-catalog",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "node test.mjs",
+    "render:examples": "node render-examples.mjs"
+  },
+  "dependencies": {
+    "@freesewing/carlita": "4.10.2",
+    "@freesewing/config": "4.10.2",
+    "@freesewing/penelope": "4.10.2",
+    "@freesewing/plugin-transform": "4.10.2",
+    "@freesewing/simon": "4.10.2",
+    "@freesewing/sophie": "4.10.2",
+    "@freesewing/teagan": "4.10.2",
+    "@freesewing/titan": "4.10.2"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "measurementSystem": "metric",
+  "garment": { "designId": "carlita", "family": "coat", "name": "Test long coat" },
+  "measurements": {
+    "biceps": 330, "bustSpan": 190, "chest": 990, "highBust": 920,
+    "hpsToBust": 270, "hpsToWaistBack": 440, "neck": 390,
+    "seat": 1020, "shoulderSlope": 17, "shoulderToElbow": 350,
+    "shoulderToShoulder": 430, "shoulderToWrist": 620,
+    "waist": 830, "waistToArmpit": 215, "waistToFloor": 1040,
+    "waistToHips": 200, "waistToSeat": 250, "wrist": 180
+  },
+  "options": { "chestEasePct": 20, "waistEasePct": 15, "seatEasePct": 15 },
+  "construction": { "seamAllowanceMm": 15 },
+  "render": { "complete": true, "paperless": false },
+  "print": { "paper": "A4", "marginMm": 10, "overlapMm": 10, "calibrationSquareMm": 50 },
+  "fabric": { "structure": "woven", "stretchPct": 0, "shrinkagePct": 3, "directionalPrint": false }
+}
