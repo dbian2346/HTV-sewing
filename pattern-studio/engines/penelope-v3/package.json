@@ -1,0 +1,11 @@
+{
+  "name": "@pattern-studio/penelope-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.mjs",
+  "dependencies": {
+    "@freesewing/core": "3.1.0",
+    "@freesewing/penelope": "3.1.0"
+  }
+}

@@ -1,0 +1,464 @@
+import './style.css';
+import { generateStudioPattern as generatePattern, exportStudioSVG as exportSVG, exportStudioPDF as exportPDF,
+  planTiles, PAPER_SIZES, formatMM, isPenelopeSpec, isFreeSewingSpec, type StudioPattern as Pattern,
+  type StudioSpec as PatternSpec, type PenelopeSpec, type CatalogSpec } from '../src/index.js';
+import { ZodError } from 'zod';
+import { garmentIntentSchema, type GarmentIntent } from '../src/photo-intent.js';
+import { mountFittedForm, readFittedForm, fittedPaths, fittedNames } from './fitted-form.js';
+
+import { catalogEntries, mountCatalogForm, readCatalogForm, writeCatalogForm, catalogPaths, catalogNames } from './catalog-form.js';
+
+const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+const form = $<HTMLFormElement>('pattern-form');
+const paper = $<HTMLSelectElement>('paper-size');
+const pieceSelect = $<HTMLSelectElement>('piece-select');
+const json = $<HTMLTextAreaElement>('json-input');
+const ruffle = $<HTMLInputElement>('ruffle-enabled');
+const pdfButton = $<HTMLButtonElement>('download-pdf');
+const svgButton = $<HTMLButtonElement>('download-svg');
+const designSelect = $<HTMLInputElement>('design-select');
+mountFittedForm($('freesewing-fields'));
+let retainedCatalogSpec: CatalogSpec | null = null;
+let retainedFittedSpec: PenelopeSpec | null = null;
+let draftRevision = 0;
+let pattern: Pattern | null = null;
+let zoom = 1;
+let pageCount: number | null = null;
+let photoIntent: GarmentIntent | null = null;
+let referenceFile: File | null = null;
+let referenceURL: string | null = null;
+let photoSessionId: string | null = null;
+let photoMatch: { name: string; explanation: string; differences: string[]; confidence: string } | null = null;
+let analysisRevision = 0;
+let analysisAbort: AbortController | null = null;
+let analyzing = false;
+const generatePhotoButton = $<HTMLButtonElement>('generate-from-photo');
+const fieldPaths: Record<string, string> = {
+  'measurements.waist': 'waist', 'measurements.hip': 'hip',
+  'garment.length': 'length', 'garment.fullnessRatio': 'fullnessRatio',
+  'garment.waistband.finishedHeight': 'bandHeight', 'garment.waistband.elasticWidth': 'elasticWidth',
+  'garment.waistband.hipEase': 'hipEase', 'garment.waistband.elasticLengthRatio': 'elasticLengthRatio',
+  'garment.waistband.elasticOverlap': 'elasticOverlap', 'garment.waistband.elasticStretchRatio': 'elasticStretchRatio',
+  'garment.ruffle.height': 'ruffleHeight', 'garment.ruffle.fullnessRatio': 'ruffleFullness',
+  'construction.seamAllowance': 'seamAllowance', 'construction.hemAllowance': 'hemAllowance',
+};
+const fieldNames: Record<string, string> = {
+  waist: 'Waist circumference', hip: 'Hip circumference', length: 'Finished length', fullnessRatio: 'Fullness ratio',
+  bandHeight: 'Waistband height', elasticWidth: 'Elastic width', hipEase: 'Hip ease',
+  elasticLengthRatio: 'Elastic length ratio', elasticOverlap: 'Elastic overlap', elasticStretchRatio: 'Usable elastic stretch',
+  ruffleHeight: 'Ruffle height', ruffleFullness: 'Ruffle fullness', seamAllowance: 'Seam allowance', hemAllowance: 'Hem allowance',
+};
+const inputField = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
+const n = (name: string) => inputField(name).valueAsNumber;
+
+function readForm() {
+  if (!['gathered_skirt', 'penelope'].includes(designSelect.value)) return readCatalogForm(form, retainedCatalogSpec!);
+  if (designSelect.value === 'penelope') return readFittedForm(form, retainedFittedSpec);
+  return {
+    measurements: { waist: n('waist'), hip: n('hip') },
+    garment: { type: 'gathered_skirt', length: n('length'), fullnessRatio: n('fullnessRatio'),
+      waistband: { finishedHeight: n('bandHeight'), elasticWidth: n('elasticWidth'), hipEase: n('hipEase'),
+        elasticLengthRatio: n('elasticLengthRatio'), elasticOverlap: n('elasticOverlap'), elasticStretchRatio: n('elasticStretchRatio') },
+      ruffle: { enabled: ruffle.checked, height: ruffle.checked ? n('ruffleHeight') : 120,
+        fullnessRatio: ruffle.checked ? n('ruffleFullness') : 1.5 } },
+    construction: { seamAllowance: n('seamAllowance'), hemAllowance: n('hemAllowance') },
+  };
+}
+function writeForm(spec: PatternSpec) {
+  const fitted = isPenelopeSpec(spec), free = isFreeSewingSpec(spec);
+  designSelect.value = free ? spec.garment.designId : 'gathered_skirt';
+  if (free && !fitted) {
+    retainedCatalogSpec = spec;
+    mountCatalogForm($('catalog-fields'), spec.garment.designId);
+    writeCatalogForm(form, spec); paper.value = spec.print.paper;
+  } else {
+    if (fitted) { retainedFittedSpec = spec; paper.value = spec.print.paper; }
+    for (const [path, name] of Object.entries(fitted ? fittedPaths : fieldPaths)) {
+      let value: unknown = spec;
+      for (const key of path.split('.')) value = (value as Record<string, unknown>)[key];
+      if (inputField(name).type === 'checkbox') inputField(name).checked = Boolean(value);
+      else inputField(name).value = value == null ? '' : String(value);
+    }
+    if (!free) ruffle.checked = spec.garment.ruffle.enabled;
+  }
+  setDesignVisibility();
+}
+function setDesignVisibility() {
+  const fitted = designSelect.value === 'penelope', gathered = designSelect.value === 'gathered_skirt';
+  for (const [id, visible] of [['gathered-fields', gathered], ['freesewing-fields', fitted], ['catalog-fields', !gathered && !fitted]] as const) {
+    $(id).hidden = !visible;
+    $(id).querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select').forEach(input => { input.disabled = !visible; });
+  }
+  if (gathered) setRuffleVisibility();
+  const entry = catalogEntries.find(d => d.designId === designSelect.value);
+  const title = gathered ? 'Gathered skirt' : fitted ? 'Penelope fitted skirt' : entry?.name ?? designSelect.value;
+  const badge = document.createElement('span'); badge.className = 'template-tag'; badge.textContent = gathered ? '01' : fitted ? '02' : 'FS';
+  $('garment-title').replaceChildren(document.createTextNode(title + ' '), badge);
+  document.title = `Pattern Studio — ${title}`;
+  $('garment-subtitle').textContent = gathered ? 'Matched automatically from your photo and drafted to your measurements.' : fitted ? 'A shaped FreeSewing draft, with darts, a back zipper, and clearly defined variations.' : 'An untested FreeSewing design. Choose measurements and design options to explore the draft.';
+  $('design-description').textContent = gathered ? 'Elastic waist, optional gathered ruffle.' : fitted ? 'FreeSewing 3.1.0 · woven pencil skirt · fit sample required.' : `FreeSewing 4.10.2 · ${entry?.description ?? entry?.family ?? ''} · untested`;
+}
+function setRuffleVisibility() {
+  $('ruffle-fields').hidden = !ruffle.checked;
+  for (const name of ['ruffleHeight', 'ruffleFullness']) inputField(name).disabled = !ruffle.checked;
+}
+function clearErrors() {
+  $('errors').hidden = true; $('errors').replaceChildren();
+  form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  form.querySelectorAll('.field-error-text').forEach(el => el.remove());
+  form.querySelectorAll('[aria-invalid]').forEach(el => { el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); });
+}
+function showErrors(error: unknown) {
+  const box = $('errors');
+  const heading = document.createElement('strong'); heading.textContent = 'A few things to check before we draft';
+  const list = document.createElement('ul');
+  const issues = error instanceof ZodError ? error.issues : [{ path: [], message: error instanceof Error ? error.message : 'Could not generate the pattern.' }];
+  for (const issue of issues) {
+    const name = (designSelect.value === 'penelope' ? fittedPaths : designSelect.value === 'gathered_skirt' ? fieldPaths : catalogPaths)[issue.path.join('.')];
+    const li = document.createElement('li');
+    li.textContent = `${name ? `${catalogNames[name] ?? fittedNames[name] ?? fieldNames[name]}: ` : ''}${issue.message}`;
+    list.append(li);
+    if (name) {
+      const field = inputField(name), label = field.closest('.field, .fitted-checkbox')!;
+      label.classList.add('field-error'); field.setAttribute('aria-invalid', 'true');
+      const message = document.createElement('span'); message.className = 'field-error-text';
+      message.id = `error-${name}`; message.textContent = issue.message;
+      label.append(message); field.setAttribute('aria-describedby', message.id);
+      const details = field.closest('details'); if (details) details.open = true;
+    }
+  }
+  box.replaceChildren(heading, list); box.hidden = false;
+}
+function updatePageCount() {
+  pageCount = null;
+  if (!pattern) return;
+  try {
+    const size = PAPER_SIZES[paper.value as keyof typeof PAPER_SIZES];
+    const margin = pattern.pdfOptions.margin ?? 12, overlap = pattern.pdfOptions.overlap ?? 10;
+    pageCount = pattern.pieces.reduce((count, piece) => count + planTiles(piece.width + 12, piece.height + 12,
+      size.width - 2 * margin, size.height - 2 * margin, overlap).tiles.length, 1);
+  } catch { pageCount = null; }
+  $('summary-pages').replaceChildren();
+  const number = document.createTextNode(pageCount === null ? '500+' : String(pageCount));
+  const small = document.createElement('small'); small.textContent = 'incl. test square';
+  $('summary-pages').append(number, small);
+  pdfButton.disabled = pageCount === null || pageCount > 500;
+  $('export-message').textContent = pdfButton.disabled ? 'This pattern exceeds the 500-sheet PDF limit. Reduce fullness or use the SVG export.' : '';
+}
+function summary(id: string, value: number, unit: string) {
+  const small = document.createElement('small'); small.textContent = unit;
+  $(id).replaceChildren(document.createTextNode(formatMM(value)), small);
+}
+function renderPreview() {
+  if (!pattern) return;
+  const selected = pattern.pieces.find(piece => piece.id === pieceSelect.value);
+  $('piece-summary').textContent = selected ? `${selected.name} · ${selected.cuttingLabel ?? `CUT ${selected.cutQuantity}${selected.onFold ? ' ON FOLD' : selected.mirrored ? ' MIRRORED' : ''}`} · Sheet bounds ${formatMM(selected.width)} × ${formatMM(selected.height)} mm`
+    : `${pattern.pieces.length} piece templates · Follow each piece’s cutting label · Preview zoom does not change print scale`;
+  // Use the same SVG exporter as downloads; filtering changes only the preview layout.
+  $('svg-container').innerHTML = exportSVG(selected ? { ...pattern, pieces: [selected] } : pattern);
+  $('svg-container').hidden = false; $('canvas-empty').hidden = true;
+  fitPreview();
+}
+function fitPreview() {
+  const svg = $('svg-container').querySelector('svg'); if (!svg) return;
+  const canvas = $('canvas');
+  const { width, height } = svg.viewBox.baseVal;
+  const padding = window.innerWidth <= 760 ? 40 : 60;
+  const scale = Math.min((canvas.clientWidth - padding) / width, (canvas.clientHeight - padding) / height);
+  svg.style.width = `${width * scale * zoom}px`; svg.style.height = `${height * scale * zoom}px`;
+  $('zoom-label').textContent = zoom === 1 ? 'Fit' : `${Math.round(zoom * 100)}%`;
+  $<HTMLButtonElement>('zoom-out').disabled = zoom <= 0.5;
+  $<HTMLButtonElement>('zoom-in').disabled = zoom >= 4;
+}
+function render(p: Pattern) {
+  draftRevision++;
+  const sameDesign = pattern?.designId === p.designId;
+  const selected = sameDesign ? pieceSelect.value : p.verification === 'untested' ? p.pieces[0]!.id : p.designId === 'penelope' ? 'penelope.front' : 'all';
+  pattern = p;
+  $('preview-legend').hidden = false;
+  pieceSelect.replaceChildren(new Option('All pieces', 'all'), ...p.pieces.map(piece => new Option(piece.name, piece.id)));
+  pieceSelect.value = p.pieces.some(piece => piece.id === selected) ? selected : 'all';
+  const experimental = p.verification === 'untested';
+  $('summary-first-label').textContent = experimental ? 'LARGEST SHEET' : 'FINISHED LENGTH';
+  summary('summary-length', p.dimensions.finishedLength ?? Math.max(...p.pieces.map(piece => piece.height)), 'mm');
+  summary('summary-pieces', p.pieces.length, p.designId === 'gathered_skirt' ? 'cut once each' : 'see native cutting labels');
+  $('summary-third-label').textContent = experimental ? 'MEASUREMENTS' : p.designId === 'penelope' ? 'EASED WAIST' : 'ELASTIC CUT LENGTH';
+  summary('summary-elastic', experimental ? Object.keys(p.spec.measurements).length : p.dimensions.elasticCutLength ?? p.dimensions.easedWaist!, experimental ? 'provided' : 'mm');
+  $('native-legend').hidden = !experimental;
+  document.querySelectorAll<HTMLElement>('.standard-legend').forEach(el => { el.hidden = experimental; });
+  $('instructions').replaceChildren(...p.instructions.map(note => { const li = document.createElement('li'); li.textContent = note; return li; }));
+  $('seam-checks').replaceChildren(...p.checks.map(check => { const line = document.createElement('p');
+    line.className = 'seam-check'; line.textContent = `${check.name}: ${formatMM(check.differenceMm)} mm difference (limit ${check.toleranceMm} mm)`; return line; }));
+  $('construction-callout').textContent = experimental ? 'This design is enabled for experimentation. Its integration, seams, cutting labels and fit have not been tested here. Follow the original design instructions and make a fit sample.' : p.designId === 'penelope' ? 'This fitted draft uses woven fabric, shaped darts and a back zipper. Check sitting and walking ease on a sewn toile before cutting final fabric. Seam checks do not establish fit.'
+    : 'This is a rectangular draft for woven fabric. Check elastic comfort and stretch on the wearer, and make a test garment before cutting your final fabric.';
+  json.value = JSON.stringify(p.spec, null, 2);
+  $('json-message').textContent = '';
+  $('draft-status').replaceChildren(document.createElement('span'), document.createTextNode(experimental ? ' Untested design' : p.designId === 'penelope' ? ' Seam checks passed' : ' Draft validated'));
+  $('draft-status').classList.toggle('untested', experimental);
+  if (isFreeSewingSpec(p.spec) && !isPenelopeSpec(p.spec)) retainedCatalogSpec = p.spec;
+  if (isPenelopeSpec(p.spec)) retainedFittedSpec = p.spec;
+  svgButton.disabled = false;
+  updatePageCount(); renderPreview();
+}
+function invalidate() {
+  draftRevision++;
+  pattern = null; svgButton.disabled = pdfButton.disabled = true;
+  $('svg-container').hidden = true; $('canvas-empty').hidden = false;
+  $('piece-summary').textContent = ''; $('seam-checks').replaceChildren();
+  $('draft-status').textContent = 'Add your measurements';
+  $('preview-legend').hidden = true;
+  $('svg-container').replaceChildren();
+  for (const id of ['summary-length', 'summary-pieces', 'summary-elastic', 'summary-pages']) $(id).textContent = '—';
+  $('instructions').replaceChildren(); $('export-message').textContent = '';
+  $('construction-callout').textContent = 'Generate a pattern to see its construction notes.';
+  pageCount = null;
+}
+form.addEventListener('submit', e => e.preventDefault());
+form.addEventListener('input', () => {
+  clearErrors(); invalidate();
+  $('match-result').hidden = true;
+  $('canvas-empty').textContent = 'Your measurements or preferences changed. Find your pattern again to update the preview.';
+  if (designSelect.value === 'gathered_skirt') setRuffleVisibility();
+  updateIntentJSON();
+});
+pieceSelect.addEventListener('change', () => { zoom = 1; renderPreview(); });
+paper.addEventListener('change', updatePageCount);
+$('zoom-in').addEventListener('click', () => { zoom = Math.min(4, zoom + 0.25); fitPreview(); });
+$('zoom-out').addEventListener('click', () => { zoom = Math.max(0.5, zoom - 0.25); fitPreview(); });
+$('zoom-fit').addEventListener('click', () => { zoom = 1; fitPreview(); });
+$('show-annotations').addEventListener('change', e => $('svg-container').classList.toggle('hide-annotations', !(e.target as HTMLInputElement).checked));
+new ResizeObserver(fitPreview).observe($('canvas'));
+
+const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tab]'));
+function activateTab(tab: HTMLButtonElement) {
+  for (const button of tabs) {
+    const active = button === tab;
+    button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active));
+    button.tabIndex = active ? 0 : -1; $(`panel-${button.dataset.tab}`).hidden = !active;
+  }
+  if (tab.dataset.tab === 'pattern') requestAnimationFrame(fitPreview);
+}
+tabs.forEach((button, index) => {
+  button.addEventListener('click', () => activateTab(button));
+  button.addEventListener('keydown', e => {
+    const key = e.key;
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) return;
+    e.preventDefault();
+    const next = key === 'Home' ? 0 : key === 'End' ? tabs.length - 1 : (index + (key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next]!.focus(); activateTab(tabs[next]!);
+  });
+});
+json.addEventListener('input', () => { $('json-message').textContent = 'Unapplied changes. Apply the specification to update your pattern and downloads.'; });
+$('apply-json').addEventListener('click', async () => {
+  clearErrors();
+  if (!photoSessionId) { showErrors(new Error('Analyze your photo first.')); return; }
+  const revision = draftRevision;
+  try {
+    const result = await apiPost<{ spec: PatternSpec; intent: GarmentIntent }>('/api/resolve', { sessionId: photoSessionId, settings: JSON.parse(json.value) });
+    if (revision !== draftRevision) throw new Error('Inputs changed. Apply the specification again.');
+    const p = generatePattern(result.spec);
+    writeForm(p.spec); render(p); photoIntent = result.intent; updateIntentJSON(); showMatch(); setFlowStep('pattern');
+    $('json-message').textContent = 'Specification applied. Your pattern and downloads are up to date.';
+  } catch (error) { invalidate(); showErrors(error); $('json-message').textContent = 'Specification was not applied. Fix the errors and try again.'; }
+});
+$('copy-intent').addEventListener('click', async () => {
+  const intentJSON = $<HTMLTextAreaElement>('intent-json');
+  if (!intentJSON.value) { $('json-message').textContent = 'Analyze your photo first.'; return; }
+  try { await navigator.clipboard.writeText(intentJSON.value); $('json-message').textContent = 'Garment intent JSON copied.'; }
+  catch { intentJSON.focus(); intentJSON.select(); $('json-message').textContent = 'Press Ctrl+C or Command+C to copy the selected garment intent.'; }
+});
+$('copy-json').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(json.value); $('json-message').textContent = 'JSON copied to clipboard.'; }
+  catch { json.focus(); json.select(); $('json-message').textContent = 'Press Ctrl+C or Command+C to copy the selected JSON.'; }
+});
+function download(bytes: BlobPart, mime: string, name: string) {
+  const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+svgButton.addEventListener('click', () => {
+  if (!pattern) return;
+    download(exportSVG(pattern), 'image/svg+xml', `${pattern.designId}.svg`);
+  $('export-message').textContent = 'SVG downloaded with all pattern pieces and annotations.';
+});
+pdfButton.addEventListener('click', async () => {
+  const snapshot = pattern; if (!snapshot) return;
+  const revision = draftRevision;
+  const paperSize = paper.value as 'A4' | 'Letter';
+  pdfButton.disabled = true; pdfButton.querySelector('span')!.textContent = 'Preparing PDF…';
+  $('export-message').textContent = `Preparing your ${pageCount}-sheet ${paperSize} pattern…`;
+  try {
+    const bytes = await exportPDF(snapshot, { paperSize });
+    if (revision !== draftRevision || snapshot !== pattern || paperSize !== paper.value) throw new Error('The pattern changed during export. Download again to use your latest settings.');
+    download(new Uint8Array(bytes).buffer, 'application/pdf', `${snapshot.designId}-${paperSize}.pdf`);
+    $('export-message').textContent = `${paperSize} PDF downloaded. Print the calibration page first at 100%.`;
+  } catch (error) { $('export-message').textContent = error instanceof Error ? error.message : 'PDF export failed. Please try again.'; }
+  finally { pdfButton.querySelector('span')!.textContent = 'Download PDF'; pdfButton.disabled = !pattern || pageCount === null || pageCount > 500; }
+});
+const guide = $<HTMLDialogElement>('print-guide');
+$('help-button').addEventListener('click', () => {
+  const steps = guide.querySelectorAll('li');
+  steps[3]!.textContent = `Print the remaining pages at the same scale. Trim the white margins and align the repeated crosses in the ${pattern?.pdfOptions.overlap ?? 10} mm overlap. With zero overlap, butt the trimmed frames together.`;
+  steps[4]!.textContent = pattern?.verification === 'untested' ? 'Assemble each piece by row and column. Follow the original design’s material-specific CUT, FOLD, BIAS and grain markings, then cut along its seam-allowance outline.' : pattern?.designId === 'penelope' ? 'Assemble each piece by row and column. Follow the CUT / FOLD labels: front once on fold, back as a mirrored pair, and the optional waistband once on its short-edge fold.'
+    : 'Assemble each piece by row and column, then cut along the solid line. Cut every labeled fabric piece once on a single layer.';
+  guide.showModal();
+});
+$('close-guide').addEventListener('click', () => guide.close());
+$('guide-done').addEventListener('click', () => guide.close());
+guide.addEventListener('click', e => { if (e.target === guide) { const r = guide.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) guide.close(); } });
+function setFlowStep(id: string) {
+  for (const step of ['photo', 'analysis', 'measure', 'pattern']) {
+    $(`step-${step}`).classList.toggle('active', step === id);
+    if (step === id) $(`step-${step}`).setAttribute('aria-current', 'step');
+    else $(`step-${step}`).removeAttribute('aria-current');
+  }
+}
+function formMeasurements() {
+  const paths = designSelect.value === 'gathered_skirt' ? fieldPaths : designSelect.value === 'penelope' ? fittedPaths : catalogPaths;
+  const measurements: Record<string, number> = {};
+  for (const [path, name] of Object.entries(paths)) {
+    if (!path.startsWith('measurements.')) continue;
+    const input = inputField(name);
+    if (!input.disabled && Number.isFinite(input.valueAsNumber) && input.valueAsNumber > 0) measurements[path.slice(13)] = input.valueAsNumber;
+  }
+  return measurements;
+}
+function updateIntentJSON() {
+  if (!photoIntent) { $<HTMLTextAreaElement>('intent-json').value = ''; return; }
+  photoIntent = { ...photoIntent, measurements: formMeasurements(), preferences: {
+    finishedLengthMm: designSelect.value === 'gathered_skirt' && Number.isFinite(n('length')) && n('length') > 0 ? n('length') : null,
+    notes: $<HTMLTextAreaElement>('photo-notes').value,
+  } };
+  $<HTMLTextAreaElement>('intent-json').value = JSON.stringify(photoIntent, null, 2);
+}
+async function apiPost<T>(url: string, body: unknown, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
+  let result: { error?: string; issues?: ZodError['issues'] };
+  try { result = await response.json(); } catch { throw new Error('The local Gemini server is unavailable. Start it with npm run dev.'); }
+  if (!response.ok) { if (result.issues) throw new ZodError(result.issues); throw new Error(result.error || 'Photo analysis failed.'); }
+  return result as T;
+}
+function resetPhotoResult() {
+  analysisAbort?.abort(); analysisAbort = null; analysisRevision++; analyzing = false;
+  photoIntent = null; photoSessionId = null; photoMatch = null; generatePhotoButton.disabled = true;
+  clearErrors(); invalidate();
+  $('pattern-settings').hidden = $('analysis-card').hidden = $('match-result').hidden = true;
+  document.body.classList.add('awaiting-photo');
+  $('garment-title').textContent = 'Your photo. Your pattern.';
+  $('garment-subtitle').textContent = 'Start with a reference. Add your measurements. We find the closest supported design.';
+  document.title = 'Pattern Studio — From photo to pattern';
+  $('canvas-empty').textContent = 'Your pattern will appear here after you add a photo and measurements.';
+  $('draft-status').textContent = 'Waiting for a photo';
+  $('analyze-photo').textContent = 'Analyze my photo';
+  json.value = ''; $('json-message').textContent = ''; updateIntentJSON(); setFlowStep('photo');
+}
+$<HTMLInputElement>('reference-photo').addEventListener('change', e => {
+  resetPhotoResult(); referenceFile = null;
+  if (referenceURL) URL.revokeObjectURL(referenceURL);
+  referenceURL = null;
+  $<HTMLImageElement>('reference-preview').removeAttribute('src');
+  $('reference-preview').hidden = true; $('upload-placeholder').hidden = false;
+  $<HTMLButtonElement>('analyze-photo').disabled = true;
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) { $('photo-status').textContent = 'Choose a photo to begin.'; return; }
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024 || file.size === 0) {
+    $('photo-status').textContent = 'Choose a JPG, PNG or WebP image between 1 byte and 8 MB.'; return;
+  }
+  referenceFile = file; referenceURL = URL.createObjectURL(file);
+  const image = $<HTMLImageElement>('reference-preview');
+  image.onload = () => { image.hidden = false; $('upload-placeholder').hidden = true;
+    $<HTMLButtonElement>('analyze-photo').disabled = false;
+    $('photo-status').textContent = `${file.name} is ready. Analyze sends the image and notes to Gemini.`; };
+  image.onerror = () => { referenceFile = null; image.hidden = true; $('upload-placeholder').hidden = false;
+    $('photo-status').textContent = 'This image could not be opened. Please choose another file.'; };
+  image.src = referenceURL;
+});
+interface AnalysisResult {
+  status: 'matched' | 'needs_clarification' | 'unsupported'; intent: GarmentIntent; summary: string;
+  sessionId?: string; pendingSpec?: PatternSpec; clarificationQuestions?: string[];
+  explanation?: string; match?: NonNullable<typeof photoMatch>;
+}
+$('analyze-photo').addEventListener('click', async () => {
+  if (!referenceFile || analyzing) return;
+  const priorMeasurements = photoIntent ? formMeasurements() : {};
+  const priorLength = photoIntent?.preferences.finishedLengthMm;
+  resetPhotoResult();
+  const revision = analysisRevision, file = referenceFile;
+  const controller = new AbortController(); analysisAbort = controller; analyzing = true;
+  const button = $<HTMLButtonElement>('analyze-photo'); button.disabled = true; button.textContent = 'Analyzing and matching…';
+  $('photo-status').textContent = 'Gemini is describing your reference and finding a supported design. This can take a minute.';
+  $('draft-status').textContent = 'Analyzing photo…'; setFlowStep('analysis');
+  try {
+    const data = await new Promise<string>((resolve,reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]!); reader.onerror = () => reject(new Error('Could not read the image.')); reader.readAsDataURL(file); });
+    const result = await apiPost<AnalysisResult>('/api/analyze', { filename: file.name, mimeType: file.type, data, notes: $<HTMLTextAreaElement>('photo-notes').value }, controller.signal);
+    if (revision !== analysisRevision) return;
+    photoIntent = garmentIntentSchema.parse(result.intent);
+    $('analysis-card').hidden = false;
+    $('analysis-heading').textContent = photoIntent.observations.category;
+    $('analysis-summary').textContent = result.summary;
+    for (const [id, values] of [['analysis-features', photoIntent.observations.visibleFeatures], ['analysis-unknowns', [...photoIntent.observations.unknownFeatures, ...(result.clarificationQuestions || [])]]] as const)
+      $(id).replaceChildren(...values.map(text => { const li = document.createElement('li'); li.textContent = text; return li; }));
+    if (result.status !== 'matched' || !result.pendingSpec || !result.sessionId || !result.match) {
+      $('photo-status').textContent = result.status === 'unsupported' ? (result.explanation || 'No useful supported design matches this reference. Try another photo or describe the intended garment.') : 'Add the requested details in your notes, then analyze again.';
+      $('draft-status').textContent = result.status === 'unsupported' ? 'No supported match' : 'More detail needed';
+      $<HTMLTextAreaElement>('intent-json').value = JSON.stringify(photoIntent,null,2); return;
+    }
+    photoSessionId = result.sessionId; photoMatch = result.match;
+    writeForm(result.pendingSpec);
+    // Pending specifications contain no body measurements. Restore only exact user-entered keys.
+    const paths = designSelect.value === 'gathered_skirt' ? fieldPaths : designSelect.value === 'penelope' ? fittedPaths : catalogPaths;
+    for (const [path,name] of Object.entries(paths)) if (path.startsWith('measurements.')) {
+      inputField(name).value = priorMeasurements[path.slice(13)] === undefined ? '' : String(priorMeasurements[path.slice(13)]);
+    }
+    if (designSelect.value === 'gathered_skirt') inputField('length').value = priorLength ? String(priorLength) : '';
+    clearErrors(); invalidate(); generatePhotoButton.disabled = false;
+    $('pattern-settings').hidden = false; document.body.classList.remove('awaiting-photo');
+    $('garment-title').textContent = 'Let’s make it yours.';
+    $('garment-subtitle').textContent = 'Your photo has been matched automatically. Add the measurements needed to draft your pattern.';
+    document.title = 'Pattern Studio — Add your measurements';
+    $('photo-status').textContent = 'Analysis ready. Enter the required measurements below; none were estimated from the photo.';
+    $('canvas-empty').textContent = 'Add your measurements, then choose Draft my pattern.';
+    $('draft-status').textContent = 'Waiting for measurements';
+    json.value = ''; updateIntentJSON(); setFlowStep('measure');
+  } catch (error) {
+    if (revision !== analysisRevision || controller.signal.aborted) return;
+    invalidate(); showErrors(error); $('photo-status').textContent = error instanceof Error ? error.message : 'Analysis failed. Try again.';
+  } finally {
+    if (revision === analysisRevision) { analyzing = false; analysisAbort = null; button.disabled = !referenceFile; button.textContent = 'Analyze my photo'; }
+  }
+});
+$('photo-notes').addEventListener('input', () => {
+  updateIntentJSON();
+  if (!photoIntent && !analyzing) return;
+  analysisAbort?.abort(); analysisRevision++; analyzing = false; photoSessionId = null; photoMatch = null;
+  invalidate(); generatePhotoButton.disabled = true; $('match-result').hidden = true;
+  $<HTMLButtonElement>('analyze-photo').disabled = !referenceFile; $('analyze-photo').textContent = 'Analyze my photo';
+  $('photo-status').textContent = 'Your notes changed. Analyze again to update the garment description and match.';
+});
+function showMatch() {
+  if (!photoMatch) return;
+  $('match-result').hidden = false;
+  $('matched-name').textContent = photoMatch.name;
+  $('matched-reason').textContent = `${photoMatch.explanation} Match confidence: ${photoMatch.confidence}.`;
+  $('matched-differences').textContent = photoMatch.differences.join(' ');
+}
+generatePhotoButton.addEventListener('click', async () => {
+  if (!photoIntent || !photoSessionId) return;
+  clearErrors(); updateIntentJSON();
+  const revision = draftRevision; generatePhotoButton.disabled = true;
+  try {
+    const result = await apiPost<{ spec: PatternSpec; intent: GarmentIntent }>('/api/resolve', { sessionId: photoSessionId, settings: readForm() });
+    if (revision !== draftRevision) throw new Error('Your inputs changed. Draft again to use the latest measurements.');
+    const p = generatePattern(result.spec);
+    writeForm(p.spec); render(p); photoIntent = result.intent; updateIntentJSON(); showMatch();
+    $('photo-status').textContent = 'Your reference was matched automatically. The draft uses the measurements you supplied.';
+    setFlowStep('pattern');
+  } catch (error) { invalidate(); showErrors(error); $('match-result').hidden = true; }
+  finally { generatePhotoButton.disabled = !photoSessionId || analyzing; }
+});
+resetPhotoResult();
+fetch('/api/health').then(async response => {
+  if (!response.ok) throw new Error('unavailable'); const status = await response.json();
+  if (!status.configured) $('photo-status').textContent = 'Gemini is not configured. Add GEMINI_API_KEY to .env and restart npm run dev.';
+}).catch(() => { $('photo-status').textContent = 'Start the local Gemini server with npm run dev to analyze photos.'; });

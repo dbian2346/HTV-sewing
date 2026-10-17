@@ -1,0 +1,41 @@
+{
+  "name": "parametric-sewing-patterns",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "engines/freesewing-v4",
+    "engines/penelope-v3"
+  ],
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "check": "tsc --noEmit -p tsconfig.json && tsc -p tsconfig.web.json",
+    "generate": "node --import tsx src/cli.ts",
+    "schema": "node --import tsx scripts/schema.ts",
+    "test:legacy": "node test.mjs",
+    "build:ui": "node scripts/build-ui.mjs",
+    "dev": "node --import tsx scripts/build-ui.mjs --serve",
+    "catalog:matching": "node scripts/export-supported-designs.mjs"
+  },
+  "dependencies": {
+    "@freesewing/core": "4.10.2",
+    "@freesewing/plugin-transform": "4.10.2",
+    "@pattern-studio/catalog-engine": "file:engines/freesewing-v4",
+    "buffer": "6.0.3",
+    "pdf-lib": "1.17.1",
+    "pdfkit": "0.20.2",
+    "svg-for-pdfkit": "0.2.1",
+    "zod": "4.1.12",
+    "@pattern-studio/penelope-engine": "file:engines/penelope-v3"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "esbuild": "0.25.12",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

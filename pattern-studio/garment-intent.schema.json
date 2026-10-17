@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "analysisSource": {
+      "type": "string",
+      "enum": [
+        "demo",
+        "gemini"
+      ]
+    },
+    "reference": {
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string"
+        },
+        "mimeType": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "filename",
+        "mimeType"
+      ],
+      "additionalProperties": false
+    },
+    "observations": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "silhouette": {
+          "type": "string"
+        },
+        "neckline": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sleeves": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "waistTreatment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "apparentLength": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hemDetails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "closures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "visibleFeatures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unknownFeatures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "category",
+        "silhouette",
+        "neckline",
+        "sleeves",
+        "waistTreatment",
+        "apparentLength",
+        "hemDetails",
+        "closures",
+        "visibleFeatures",
+        "unknownFeatures"
+      ],
+      "additionalProperties": false
+    },
+    "measurements": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 5000
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "properties": {
+        "finishedLengthMm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "finishedLengthMm",
+        "notes"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "analysisSource",
+    "reference",
+    "observations",
+    "measurements",
+    "preferences"
+  ],
+  "additionalProperties": false,
+  "title": "Photo garment intent",
+  "description": "Neutral garment observations, user-provided measurements and preferences before catalog matching. analysisSource identifies Gemini output or test fixtures. No designId belongs in this object."
+}

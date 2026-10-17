@@ -1,0 +1,18 @@
+export { generatePattern } from './draft.js';
+export type { Pattern, SeamRelationship } from './draft.js';
+export { specSchema, inputSchema } from './schema.js';
+export type { PatternInput, PatternSpec } from './schema.js';
+export * from './geometry.js';
+export { exportSVG, layoutPattern } from './svg.js';
+export { exportPDF, exportVectorPDF, planTiles, PAPER_SIZES, MM_TO_PT } from './pdf.js';
+export type { PDFOptions, Tile, TilePlan } from './pdf.js';
+export { exportVectorSVG, gatheredVectorPattern } from './vector.js';
+export type { VectorPiece, VectorPattern } from './vector.js';
+export { generatePenelope, PENELOPE_VERSION } from './freesewing/penelope.js';
+export type { PenelopePattern } from './freesewing/penelope.js';
+export { penelopeSchema, penelopeInputSchema, mapPenelopeSettings } from './freesewing/schema.js';
+export type { PenelopeInput, PenelopeSpec } from './freesewing/schema.js';
+export { generateStudioPattern, exportStudioSVG, exportStudioPDF, isPenelopeSpec, isFreeSewingSpec } from './studio.js';
+export type { StudioSpec, StudioPattern } from './studio.js';
+export { generateCatalogPattern, validateCatalogSpec, CATALOG_ENGINE_VERSION } from './freesewing/catalog-runtime.js';
+export type { CatalogSpec, CatalogPattern } from './freesewing/catalog-runtime.js';

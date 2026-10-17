@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 2
+    },
+    "measurementSystem": {
+      "type": "string",
+      "const": "metric"
+    },
+    "garment": {
+      "type": "object",
+      "properties": {
+        "designId": {
+          "type": "string",
+          "const": "penelope"
+        },
+        "family": {
+          "type": "string",
+          "const": "skirt"
+        },
+        "name": {
+          "default": "Penelope pencil skirt",
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "designId",
+        "family"
+      ],
+      "additionalProperties": false
+    },
+    "measurements": {
+      "type": "object",
+      "properties": {
+        "waist": {
+          "type": "number",
+          "minimum": 200,
+          "maximum": 2500
+        },
+        "seat": {
+          "type": "number",
+          "minimum": 200,
+          "maximum": 2500
+        },
+        "waistToHips": {
+          "type": "number",
+          "minimum": 50,
+          "maximum": 1500
+        },
+        "waistToSeat": {
+          "type": "number",
+          "minimum": 50,
+          "maximum": 1500
+        },
+        "waistToKnee": {
+          "type": "number",
+          "minimum": 50,
+          "maximum": 1500
+        },
+        "waistBack": {
+          "type": "number",
+          "minimum": 50,
+          "maximum": 2500
+        },
+        "seatBack": {
+          "type": "number",
+          "minimum": 50,
+          "maximum": 2500
+        }
+      },
+      "required": [
+        "waist",
+        "seat",
+        "waistToHips",
+        "waistToSeat",
+        "waistToKnee"
+      ],
+      "additionalProperties": false
+    },
+    "options": {
+      "default": {
+        "curvedDarts": true,
+        "backVent": true,
+        "nrOfDarts": 2,
+        "waistband": true,
+        "lengthBonusPct": 0,
+        "hemBonusPct": 0,
+        "waistEasePct": 1,
+        "seatEasePct": 1
+      },
+      "type": "object",
+      "properties": {
+        "curvedDarts": {
+          "default": true,
+          "type": "boolean"
+        },
+        "backVent": {
+          "default": true,
+          "type": "boolean"
+        },
+        "nrOfDarts": {
+          "default": 2,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "waistband": {
+          "default": true,
+          "type": "boolean"
+        },
+        "lengthBonusPct": {
+          "default": 0,
+          "type": "number",
+          "minimum": -50,
+          "maximum": 50
+        },
+        "hemBonusPct": {
+          "default": 0,
+          "type": "number",
+          "minimum": -35,
+          "maximum": 0
+        },
+        "waistEasePct": {
+          "default": 1,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "seatEasePct": {
+          "default": 1,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8
+        }
+      },
+      "additionalProperties": false
+    },
+    "construction": {
+      "default": {
+        "seamAllowanceMm": 10
+      },
+      "type": "object",
+      "properties": {
+        "seamAllowanceMm": {
+          "default": 10,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        }
+      },
+      "additionalProperties": false
+    },
+    "render": {
+      "default": {
+        "complete": true,
+        "paperless": false
+      },
+      "type": "object",
+      "properties": {
+        "complete": {
+          "default": true,
+          "type": "boolean",
+          "const": true
+        },
+        "paperless": {
+          "default": false,
+          "type": "boolean",
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "print": {
+      "default": {
+        "paper": "A4",
+        "marginMm": 12,
+        "overlapMm": 10,
+        "calibrationSquareMm": 50
+      },
+      "type": "object",
+      "properties": {
+        "paper": {
+          "default": "A4",
+          "type": "string",
+          "enum": [
+            "A4",
+            "Letter"
+          ]
+        },
+        "marginMm": {
+          "default": 12,
+          "type": "number",
+          "minimum": 10,
+          "maximum": 40
+        },
+        "overlapMm": {
+          "default": 10,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "calibrationSquareMm": {
+          "default": 50,
+          "type": "number",
+          "const": 50
+        }
+      },
+      "additionalProperties": false
+    },
+    "fabric": {
+      "type": "object",
+      "properties": {
+        "structure": {
+          "type": "string",
+          "const": "woven"
+        },
+        "stretchPct": {
+          "type": "number",
+          "const": 0
+        },
+        "shrinkagePct": {
+          "default": 0,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "directionalPrint": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "structure",
+        "stretchPct"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "measurementSystem",
+    "garment",
+    "measurements"
+  ],
+  "additionalProperties": false,
+  "title": "Registered Penelope runtime input",
+  "description": "Structural contract for the tested FreeSewing Penelope adapter. Cross-field validation and seam-length gates run in generatePenelope(). Other designs use the untested catalog runtime."
+}

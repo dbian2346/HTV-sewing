@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "measurements": {
+      "type": "object",
+      "properties": {
+        "waist": {
+          "type": "number",
+          "minimum": 200,
+          "maximum": 5000
+        },
+        "hip": {
+          "type": "number",
+          "minimum": 200,
+          "maximum": 5000
+        }
+      },
+      "required": [
+        "waist",
+        "hip"
+      ],
+      "additionalProperties": false
+    },
+    "garment": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "gathered_skirt"
+        },
+        "length": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 2000
+        },
+        "fullnessRatio": {
+          "default": 2,
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "waistband": {
+          "default": {
+            "finishedHeight": 30,
+            "elasticWidth": 25,
+            "elasticLengthRatio": 0.9,
+            "elasticOverlap": 20,
+            "elasticStretchRatio": 2,
+            "hipEase": 40
+          },
+          "type": "object",
+          "properties": {
+            "finishedHeight": {
+              "default": 30,
+              "type": "number",
+              "minimum": 20,
+              "maximum": 150
+            },
+            "elasticWidth": {
+              "default": 25,
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 140
+            },
+            "elasticLengthRatio": {
+              "default": 0.9,
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1
+            },
+            "elasticOverlap": {
+              "default": 20,
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 50
+            },
+            "elasticStretchRatio": {
+              "default": 2,
+              "type": "number",
+              "minimum": 1,
+              "maximum": 4
+            },
+            "hipEase": {
+              "default": 40,
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            }
+          },
+          "additionalProperties": false
+        },
+        "ruffle": {
+          "default": {
+            "enabled": false,
+            "height": 120,
+            "fullnessRatio": 1.5
+          },
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "type": "boolean"
+            },
+            "height": {
+              "default": 120,
+              "type": "number",
+              "minimum": 40,
+              "maximum": 1000
+            },
+            "fullnessRatio": {
+              "default": 1.5,
+              "type": "number",
+              "minimum": 1,
+              "maximum": 4
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "length"
+      ],
+      "additionalProperties": false
+    },
+    "construction": {
+      "default": {
+        "seamAllowance": 10,
+        "hemAllowance": 25
+      },
+      "type": "object",
+      "properties": {
+        "seamAllowance": {
+          "default": 10,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "hemAllowance": {
+          "default": 25,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "measurements",
+    "garment"
+  ],
+  "additionalProperties": false,
+  "title": "Gathered skirt pattern input (millimetres)",
+  "description": "Structural schema. Also validate using specSchema for hip clearance, elastic stretch, casing width and positive body length."
+}

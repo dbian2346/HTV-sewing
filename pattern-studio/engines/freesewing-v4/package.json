@@ -1,0 +1,17 @@
+{
+  "name": "@pattern-studio/catalog-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.mjs",
+  "dependencies": {
+    "@freesewing/collection": "4.10.2",
+    "@freesewing/config": "4.10.2",
+    "@freesewing/core": "4.10.2",
+    "@freesewing/core-plugins": "4.10.2",
+    "@freesewing/i18n": "4.10.2",
+    "@freesewing/plugin-i18n": "4.10.2",
+    "@freesewing/plugin-theme": "4.10.2",
+    "@freesewing/plugin-transform": "4.10.2"
+  }
+}

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#223e3a" />
+  <meta name="description" content="Upload inspiration, describe your measurements, and preview an automatically matched sewing pattern. Photo analysis with Gemini and automatic supported-design matching." />
+  <title>Pattern Studio — From photo to pattern</title>
+  <link rel="stylesheet" href="/main.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Pattern Studio home"><span class="brand-icon" aria-hidden="true">✂</span> pattern<span class="brand-light">studio</span><span class="beta">MVP</span></a>
+    <div class="header-note"><span class="status-dot"></span> Gemini photo analysis · key stays on the server</div>
+    <button class="text-button" id="help-button">Print guide <span aria-hidden="true">↗</span></button>
+  </header>
+  <main>
+    <section class="page-heading">
+      <div><div class="eyebrow">FROM INSPIRATION TO SOMETHING YOU CAN MAKE</div><h1 id="garment-title">Your photo. Your pattern.</h1><p id="garment-subtitle">Start with a reference. Add your measurements. We find the closest supported design.</p></div>
+
+    </section>
+    <ol class="flow-steps" aria-label="Photo-to-pattern steps"><li id="step-photo" class="active"><span>01</span> Add a photo</li><li id="step-analysis"><span>02</span> Review the analysis</li><li id="step-measure"><span>03</span> Add measurements</li><li id="step-pattern"><span>04</span> See your pattern</li></ol>
+    <section class="photo-intake" aria-labelledby="photo-heading">
+      <div class="photo-upload">
+        <img id="reference-preview" alt="Your uploaded garment reference" hidden>
+        <div id="upload-placeholder"><span aria-hidden="true">↥</span><h2 id="photo-heading">Start with your inspiration</h2><p>A clear garment photo, ideally showing the full shape.</p></div>
+        <label class="secondary-button" for="reference-photo">Choose a photo</label>
+        <input id="reference-photo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="photo-file-help">
+        <p id="photo-file-help">JPG, PNG or WebP · up to 8 MB</p>
+      </div>
+      <div class="photo-intake-copy">
+        <span class="eyebrow">A PATTERN THAT STARTS WITH WHAT YOU SEE</span><h2>Let the photo lead.</h2>
+        <p>Gemini describes the garment’s shape, details and construction, then uses your measurements to find and draft a supported pattern.</p>
+        <label class="photo-notes-label" for="photo-notes">What would you like to make?</label><textarea id="photo-notes" maxlength="2000" placeholder="Describe the garment in the photo, or a detail you want to change."></textarea>
+        <div class="prototype-note"><strong>Photo analysis with Gemini</strong><p>Analyze sends your photo and notes to Google Gemini. Your measurements are validated locally when you draft; they are not inferred from your photo. Photos are not saved by this app.</p></div>
+        <button class="primary-button" id="analyze-photo" disabled>Analyze my photo <span aria-hidden="true">↗</span></button>
+        <p id="photo-status" role="status" aria-live="polite">Choose a reference photo to begin.</p>
+      </div>
+    </section>
+    <section id="analysis-card" class="analysis-card" aria-labelledby="analysis-heading" hidden><div><span class="eyebrow">GEMINI GARMENT ANALYSIS</span><h2 id="analysis-heading">What’s in your reference</h2><p id="analysis-summary"></p><ul id="analysis-features" class="feature-chips"></ul><p class="field-help">The garment description is stored before any catalog design is selected. Enter your actual measurements below.</p></div><div class="analysis-unknowns"><h3>Still needs your input</h3><ul id="analysis-unknowns"></ul></div></section>
+    <section id="match-result" class="match-result" aria-live="polite" hidden><span class="eyebrow">AUTOMATIC CATALOG MATCH</span><h2 id="matched-name"></h2><p id="matched-reason"></p><p id="matched-differences" class="field-help"></p></section>
+    <div class="workspace">
+      <aside id="pattern-settings" class="settings-card" aria-label="Your measurements and preferences" hidden>
+        <div class="card-heading"><h2>Your measurements & preferences</h2><span class="unit-tag">ALL IN MM</span></div>
+        <input id="design-select" type="hidden" value="gathered_skirt"><p id="design-description" hidden></p>
+        <form id="pattern-form" novalidate>
+          <div id="gathered-fields">
+          <section class="form-section"><div class="section-heading"><span class="section-number">01</span><h3>Body measurements</h3></div>
+            <div class="field-grid">
+              <label class="field">Waist circumference<div class="input-wrap"><input name="waist" type="number" min="200" max="5000" step="any" value="720" required><span>mm</span></div></label>
+              <label class="field">Hip circumference<div class="input-wrap"><input name="hip" type="number" min="200" max="5000" step="any" value="980" required><span>mm</span></div></label>
+            </div><p class="field-help">Measure your natural waist and the fullest part of your hips.</p>
+          </section>
+          <section class="form-section"><div class="section-heading"><span class="section-number">02</span><h3>Skirt design</h3></div>
+            <div class="field-grid">
+              <label class="field">Finished length<div class="input-wrap"><input name="length" type="number" min="1" max="2000" step="any" value="600" required><span>mm</span></div></label>
+              <label class="field">Fullness ratio<div class="input-wrap"><input name="fullnessRatio" type="number" min="1" max="5" step="any" value="2" required><span>×</span></div></label>
+            </div><p class="field-help">Length includes the waistband and ruffle. Fullness is relative to your waist.</p>
+            <div class="toggle-row"><div><label for="ruffle-enabled">Add a gathered ruffle</label><p>A little extra movement at the hem</p></div><label class="switch"><input type="checkbox" id="ruffle-enabled" checked><span class="switch-track"></span></label></div>
+            <div class="field-grid ruffle-fields" id="ruffle-fields">
+              <label class="field">Ruffle height<div class="input-wrap"><input name="ruffleHeight" type="number" min="40" max="1000" step="any" value="120" required><span>mm</span></div></label>
+              <label class="field">Ruffle fullness<div class="input-wrap"><input name="ruffleFullness" type="number" min="1" max="4" step="any" value="1.5" required><span>×</span></div></label>
+            </div>
+          </section>
+          <section class="form-section"><div class="section-heading"><span class="section-number">03</span><h3>Waistband & finishing</h3></div>
+            <div class="field-grid">
+              <label class="field">Waistband height<div class="input-wrap"><input name="bandHeight" type="number" min="20" max="150" step="any" value="30" required><span>mm</span></div></label>
+              <label class="field">Elastic width<div class="input-wrap"><input name="elasticWidth" type="number" min="1" max="140" step="any" value="25" required><span>mm</span></div></label>
+              <label class="field">Seam allowance<div class="input-wrap"><input name="seamAllowance" type="number" min="0" max="100" step="any" value="10" required><span>mm</span></div></label>
+              <label class="field">Hem allowance<div class="input-wrap"><input name="hemAllowance" type="number" min="0" max="100" step="any" value="25" required><span>mm</span></div></label>
+            </div>
+            <details class="advanced"><summary>Elastic & hip clearance <span>+</span></summary><div class="field-grid">
+              <label class="field">Hip ease<div class="input-wrap"><input name="hipEase" type="number" min="0" max="200" step="any" value="40" required><span>mm</span></div></label>
+              <label class="field">Elastic length ratio<div class="input-wrap"><input name="elasticLengthRatio" type="number" min="0.5" max="1" step="any" value="0.9" required><span>×</span></div></label>
+              <label class="field">Elastic overlap<div class="input-wrap"><input name="elasticOverlap" type="number" min="1" max="50" step="any" value="20" required><span>mm</span></div></label>
+              <label class="field">Usable elastic stretch<div class="input-wrap"><input name="elasticStretchRatio" type="number" min="1" max="4" step="any" value="2" required><span>×</span></div></label>
+            </div><p class="field-help">Check your actual elastic. A 2× ratio means it can comfortably stretch to twice its joined length.</p></details>
+          </section>
+          </div>
+          <div id="freesewing-fields" hidden></div>
+          <div id="catalog-fields" hidden></div>
+        </form>
+        <div class="photo-generate"><button id="generate-from-photo" class="primary-button">Draft my pattern <span aria-hidden="true">↗</span></button><p class="field-help">Your reference is matched automatically. Add the measurements needed for that design, then draft your pattern.</p></div>
+      </aside>
+      <section class="result-column" aria-label="Generated pattern">
+        <div class="error-panel" id="errors" role="alert" hidden></div>
+        <div class="preview-card">
+          <div class="preview-heading"><div class="tabs" role="tablist" aria-label="Pattern views"><button id="tab-pattern" class="tab active" role="tab" aria-selected="true" aria-controls="panel-pattern" data-tab="pattern">Pattern preview</button><button id="tab-spec" class="tab" role="tab" aria-selected="false" aria-controls="panel-spec" data-tab="spec" tabindex="-1">JSON specification</button><button id="tab-instructions" class="tab" role="tab" aria-selected="false" aria-controls="panel-instructions" data-tab="instructions" tabindex="-1">Sewing notes</button></div><span id="draft-status" class="draft-status">Waiting for a photo</span></div>
+          <div id="panel-pattern" role="tabpanel" aria-labelledby="tab-pattern">
+            <div class="preview-toolbar"><label class="sr-only" for="piece-select">Preview piece</label><select id="piece-select"><option value="all">All pieces</option></select><div class="zoom-controls"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">Fit</span><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-fit">Fit</button></div></div>
+            <div id="piece-summary" class="piece-summary"></div>
+            <div class="canvas" id="canvas"><div id="svg-container" aria-label="Generated sewing pattern preview"></div><div class="canvas-empty" id="canvas-empty">Your pattern will appear here after you add a photo and measurements.</div></div>
+            <div class="preview-legend" id="preview-legend" hidden><span class="standard-legend"><i class="legend-line cut-line"></i> Cutting line</span><span class="standard-legend"><i class="legend-line stitch-line"></i> Stitching / hem</span><span class="standard-legend"><i class="legend-line fold-line"></i> Fold</span><span id="native-legend" hidden>Native FreeSewing markings · See sewing notes</span><label><input type="checkbox" id="show-annotations" checked> Annotations</label></div>
+          </div>
+          <div id="panel-spec" class="text-panel" role="tabpanel" aria-labelledby="tab-spec" hidden><p>The garment intent describes the reference before catalog matching. The resolved specification below is what the drafting engine consumes.</p><label class="json-label" for="intent-json">Garment intent · photo analysis + your measurements</label><textarea id="intent-json" spellcheck="false" readonly placeholder="Your garment description will appear here."></textarea><label class="json-label" for="json-input">Resolved pattern specification</label><label for="json-input" class="sr-only">Garment JSON specification</label><textarea id="json-input" spellcheck="false"></textarea><p>For photo matching, download the supported-design catalog and attach it alongside your reference photo in a vision-capable LLM.</p><div class="json-actions"><a class="secondary-button" href="./supported-designs.json" download="supported-designs.json">Design catalog JSON</a><button class="secondary-button" id="copy-intent">Copy garment intent</button><button class="secondary-button" id="copy-json">Copy pattern JSON</button><button class="primary-button" id="apply-json">Apply specification <span>↗</span></button></div><p id="json-message" class="field-help" role="status"></p></div>
+          <div id="panel-instructions" class="text-panel notes-panel" role="tabpanel" aria-labelledby="tab-instructions" hidden><div class="eyebrow">FROM PAPER TO FABRIC</div><h2>Let’s put it together.</h2><div id="seam-checks"></div><ol id="instructions"></ol><div id="construction-callout" class="note-callout">Generate a pattern to see its construction notes.</div></div>
+        </div>
+        <div class="summary-grid" aria-live="polite"><div><span id="summary-first-label">FINISHED LENGTH</span><strong id="summary-length">—</strong></div><div><span>PATTERN PIECES</span><strong id="summary-pieces">—</strong></div><div><span id="summary-third-label">ELASTIC CUT LENGTH</span><strong id="summary-elastic">—</strong></div><div><span>PRINTED SHEETS</span><strong id="summary-pages">—</strong></div></div>
+        <section class="export-card"><div class="export-top"><div><h2>Ready for the cutting table?</h2><p>Full-scale patterns, a calibration square, and room to line things up.</p></div><span class="scale-badge">1:1 SCALE</span></div><div class="export-controls"><label class="field paper-field">Paper size<select id="paper-size"><option value="A4">A4 · 210 × 297 mm</option><option value="Letter">US Letter · 8.5 × 11 in</option></select></label><button id="download-svg" disabled class="secondary-button download-button">↓ <span>Download SVG</span></button><button id="download-pdf" disabled class="primary-button download-button">↓ <span>Download PDF</span></button></div><div class="print-reminder"><span class="info-icon">i</span> Print at <strong>100% / Actual Size</strong>. Check the 50 × 50 mm square before cutting.</div><div id="export-message" role="status" class="export-message"></div></section>
+      </section>
+    </div>
+    <footer class="page-footer"><span>MADE TO MEASURE. READY TO MAKE.</span><span>74 FreeSewing entries + gathered skirt · Millimetres throughout</span></footer>
+  </main>
+  <dialog id="print-guide"><div class="dialog-heading"><span class="eyebrow">A QUICK PRINT CHECK</span><button id="close-guide" class="text-button" aria-label="Close print guide">✕</button></div><h2>Good patterns start<br>with the right scale.</h2><ol><li>Choose A4 or US Letter to match your paper.</li><li>Download the PDF and print the first page at <strong>100% / Actual Size</strong>. Disable Fit or Shrink.</li><li>Measure the calibration square: it must be <strong>50 × 50 mm</strong> between line centers.</li><li>Print the remaining pages at the same scale. Trim the white margins and align the repeated crosses in the <strong>10 mm overlap</strong>.</li><li>Assemble each piece by row and column, then cut along the solid line. Cut every labeled fabric piece once on a single layer.</li></ol><p>SVG is for previewing and vector editing. Use the tiled PDF for printing on standard paper.</p><button id="guide-done" class="primary-button">Got it</button></dialog>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

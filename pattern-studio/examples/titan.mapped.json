@@ -1,0 +1,43 @@
+{
+  "designId": "titan",
+  "package": "@freesewing/titan",
+  "freesewingSettings": {
+    "measurements": {
+      "waist": 820,
+      "waistBack": 420,
+      "seat": 1040,
+      "seatBack": 540,
+      "crossSeam": 760,
+      "crossSeamFront": 350,
+      "knee": 410,
+      "waistToFloor": 1050,
+      "waistToHips": 200,
+      "waistToKnee": 610,
+      "waistToSeat": 270,
+      "waistToUpperLeg": 320
+    },
+    "options": {
+      "waistEase": 0.02,
+      "seatEase": 0.02,
+      "kneeEase": 0.06,
+      "fitKnee": false
+    },
+    "sa": 10,
+    "complete": true,
+    "paperless": false,
+    "units": "metric",
+    "scale": 1
+  },
+  "print": {
+    "paper": "A4",
+    "marginMm": 10,
+    "overlapMm": 10,
+    "calibrationSquareMm": 50
+  },
+  "fabricMetadata": {
+    "structure": "woven",
+    "stretchPct": 0,
+    "shrinkagePct": 3,
+    "directionalPrint": false
+  }
+}

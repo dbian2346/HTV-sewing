@@ -1,0 +1,41 @@
+{
+  "designId": "penelope",
+  "package": "@freesewing/penelope",
+  "freesewingSettings": {
+    "measurements": {
+      "waist": 760,
+      "seat": 1020,
+      "waistToHips": 190,
+      "waistToSeat": 230,
+      "waistToKnee": 590,
+      "waistBack": 390,
+      "seatBack": 530
+    },
+    "options": {
+      "curvedDarts": true,
+      "backVent": true,
+      "nrOfDarts": 2,
+      "waistband": true,
+      "waistEase": 0.01,
+      "seatEase": 0.01,
+      "lengthBonus": 0
+    },
+    "sa": 10,
+    "complete": true,
+    "paperless": false,
+    "units": "metric",
+    "scale": 1
+  },
+  "print": {
+    "paper": "A4",
+    "marginMm": 10,
+    "overlapMm": 10,
+    "calibrationSquareMm": 50
+  },
+  "fabricMetadata": {
+    "structure": "woven",
+    "stretchPct": 0,
+    "shrinkagePct": 3,
+    "directionalPrint": false
+  }
+}
