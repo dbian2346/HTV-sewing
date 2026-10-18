@@ -55,7 +55,7 @@ export function mountOnboarding(onComplete: (profile:MeasurementProfile)=>void, 
     abort?.abort();revision++;photo=null;if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;
     $('body-photo-preview').hidden=true;$('onboard-error').textContent='';
     if(!file)return;
-    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size===0||file.size>8*1024*1024){error('Choose a JPG, PNG or WebP image up to 8 MB.');return;}
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size===0||file.size>3*1024*1024){error('Choose a JPG, PNG or WebP image up to 3 MB.');return;}
     photo=file;photoURL=URL.createObjectURL(file);const image=$<HTMLImageElement>('body-photo-preview');image.src=photoURL;image.hidden=false;
     image.onerror=()=>{photo=null;abort?.abort();revision++;image.hidden=true;error('This photo could not be opened. Choose another image.');};
     $<HTMLButtonElement>('estimate-body').disabled=false;$('estimate-body').textContent='Estimate measurements';

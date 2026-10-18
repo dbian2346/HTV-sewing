@@ -20,5 +20,5 @@ if (process.argv.includes('--serve')) {
   process.on('SIGINT', async () => { server.close(); await ctx.dispose(); process.exit(0); });
 } else {
   await build(options);
-  console.log('Built Pattern Studio in out/');
+  console.log('Built Sewberry in out/');
 }

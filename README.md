@@ -20,6 +20,16 @@ npm run dev
 
 Open **http://127.0.0.1:4173**. Upload a photo, click **Analyze my photo**, enter the requested measurements, and click **Draft my pattern**. `.env` is excluded from Git. The tracked `.env.example` contains only an empty placeholder. Photos and garment notes are sent to Google Gemini when you analyze; body measurements are validated locally and are not sent to Gemini. All existing garment-fit and print-scale limitations still apply.
 
+## Compact fabric layout
+
+`main.py` packs the drawable top-level pieces from a Pattern Studio SVG into a compact, non-overlapping fabric strip. It replaces the SVG's old preview transforms, tries several deterministic MaxRects packing orders, keeps a 2 mm cutting clearance by default, and fails rather than silently dropping a piece that cannot fit. Empty placeholder groups are reported and excluded.
+
+```bash
+python3 main.py --input sven.svg --fabric-width-cm 140 --output optimized_layout.svg
+```
+
+Pieces are not rotated by default because turning a sewing pattern can violate its grainline, nap, or directional print. `--allow-rotation` enables 90-degree turns only when those fabric constraints permit it. Adjust cutting clearance with `--gap-mm`. Run `python3 -m unittest -v test_main.py` for the optimizer regression tests.
+
 ## Quick start
 
 Use Node.js 22.18 or newer.

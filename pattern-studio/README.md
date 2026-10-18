@@ -1,4 +1,4 @@
-# Parametric sewing pattern engine
+# Sewberry
 
 TypeScript engine with all 74 cataloged FreeSewing designs enabled alongside a custom gathered skirt with an elastic casing and optional ruffle, and a fitted Penelope pencil skirt drafted with FreeSewing. It validates JSON with Zod, drafts millimetre geometry, and exports SVG previews and vector PDFs using pdf-lib, with PDFKit for native SVG pieces. Use the browser test interface or the standalone CLI.
 
@@ -21,7 +21,20 @@ Restart `npm run dev` after changing server files or `.env`. Open **http://127.0
 
 Customize asks only for shoulder-to-shoulder, chest and waist on tops, or length and waist on bottoms, in centimeters. Essential values are filled from the guest profile where available. The drafting adapter converts to millimeters, uses saved/photo measurements for other required dimensions, and completes missing secondary dimensions using explicitly marked standard-proportion estimates. Continue to Fabric, choose fabric width and length, then Generate Pattern. Estimated fit is not a fully measured custom fit. Garment-reference analysis does not estimate body dimensions; body-photo estimation is an explicit separate request with height calibration. Numeric design options retain the matched design's defaults. The JSON tab shows garment intent and the resolved engine specification separately. The original sample analyzer remains only as a test fixture.
 
-The key is read only by the local Node server. Static routes serve a fixed list of build assets and cannot serve `.env`; the key is sent to Google in the request header, never bundled into browser JavaScript. The server binds to `127.0.0.1`, checks API request origins, bounds image uploads to 8 MB, and retains analysis metadata in memory for 30 minutes. It does not save images to disk or persist measurements. Restarting the server expires pending analyses. A model response is schema-validated and selected IDs/options are checked against installed adapters before drafting.
+The key is read only by the server. Static routes cannot serve `.env`; the key is sent to Google in the request header and is never bundled into browser JavaScript. API calls are restricted to the same Sewberry origin, and images are limited to 3 MB so requests remain within the hosting limit. Images are not saved to disk. A successful match returns a signed, 30-minute analysis token, so the hosted flow works across stateless functions without storing the user's photo or measurements. A model response is schema-validated and selected IDs/options are checked against installed adapters before drafting.
+
+## Deploy to Vercel
+
+Use `pattern-studio` as the Vercel project's root directory. The included `vercel.json` builds the static interface and deploys the four photo routes as Node.js functions. Configure these environment variables for Production and Preview:
+
+```env
+GEMINI_API_KEY=your_key_here
+SESSION_SECRET=at_least_32_random_characters
+# Optional:
+# GEMINI_MODEL=gemini-3.6-flash
+```
+
+`SESSION_SECRET` signs the short-lived analysis token and must stay stable across function invocations. `npm run build:ui` creates the deployable static interface in `out/`.
 
 See [docs/photo-to-pattern.md](docs/photo-to-pattern.md) for the architecture. Generated patterns include piece previews, zoom, sewing notes and A4/Letter PDF or SVG downloads. Changed or invalid inputs disable stale downloads. Print at Actual Size and verify the calibration square. The Gemini integration does not establish garment fit or validate the previously untested design engines.
 
@@ -61,7 +74,7 @@ Regenerate the JSON after changing catalog descriptions or runtime definitions:
 npm run catalog:matching
 ```
 
-UI builds also regenerate and copy the file into `out/`. The photo-first interface uses this catalog for server-side Gemini matching. Static builds alone cannot analyze photos; use the local server to keep the API key private.
+UI builds also regenerate and copy the file into `out/`. The photo-first interface uses this catalog for server-side Gemini matching. Static builds alone cannot analyze photos; use the local server or the included Vercel functions to keep the API key private.
 
 ## Run
 

@@ -140,7 +140,7 @@ function setDesignVisibility() {
   const title = gathered ? 'Gathered skirt' : fitted ? 'Penelope fitted skirt' : entry?.name ?? designSelect.value;
   const badge = document.createElement('span'); badge.className = 'template-tag'; badge.textContent = gathered ? '01' : fitted ? '02' : 'FS';
   $('garment-title').replaceChildren(document.createTextNode(title + ' '), badge);
-  document.title = `Pattern Studio — ${title}`;
+  document.title = `Sewberry — ${title}`;
   $('garment-subtitle').textContent = gathered ? 'Matched automatically from your photo and drafted to your measurements.' : fitted ? 'A shaped FreeSewing draft, with darts, a back zipper, and clearly defined variations.' : 'An untested FreeSewing design. Choose measurements and design options to explore the draft.';
   $('design-description').textContent = gathered ? 'Elastic waist, optional gathered ruffle.' : fitted ? 'FreeSewing 3.1.0 · woven pencil skirt · fit sample required.' : `FreeSewing 4.10.2 · ${entry?.description ?? entry?.family ?? ''} · untested`;
 }
@@ -508,7 +508,7 @@ function resetPhotoResult() {
   document.body.classList.add('awaiting-photo');
   $('garment-title').textContent = 'Your photo. Your pattern.';
   $('garment-subtitle').textContent = 'Start with a reference. Add your measurements. We find the closest supported design.';
-  document.title = 'Pattern Studio — From photo to pattern';
+  document.title = 'Sewberry — From photo to pattern';
   $('canvas-empty').textContent = 'Your pattern will appear here after you add a photo and measurements.';
   $('draft-status').textContent = 'Waiting for a photo';
   $('analyze-photo').textContent = 'Analyze my photo';
@@ -525,8 +525,8 @@ $<HTMLInputElement>('reference-photo').addEventListener('change', e => {
   $<HTMLButtonElement>('analyze-photo').disabled = true;
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) { $('photo-status').textContent = ''; return; }
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024 || file.size === 0) {
-    $('photo-status').textContent = 'Choose a JPG, PNG or WebP image between 1 byte and 8 MB.'; return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 3 * 1024 * 1024 || file.size === 0) {
+    $('photo-status').textContent = 'Choose a JPG, PNG or WebP image between 1 byte and 3 MB.'; return;
   }
   referenceFile = file; referenceURL = URL.createObjectURL(file);
   const image = $<HTMLImageElement>('reference-preview');
@@ -584,7 +584,7 @@ $('analyze-photo').addEventListener('click', async () => {
     $('pattern-settings').hidden = false; document.body.classList.remove('awaiting-photo');
     $('garment-title').textContent = 'Let’s make it yours.';
     $('garment-subtitle').textContent = 'Your photo has been matched automatically. Add the measurements needed to draft your pattern.';
-    document.title = 'Pattern Studio — Add your measurements';
+    document.title = 'Sewberry — Add your measurements';
     $('photo-status').textContent = '';
     $('canvas-empty').textContent = 'Add your measurements, then choose Draft my pattern.';
     $('draft-status').textContent = 'Waiting for measurements';

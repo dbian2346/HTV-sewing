@@ -7,7 +7,7 @@ import { validateImage } from './image-upload.mjs';
 export const measurementLandmarks = JSON.parse(await readFile(new URL('./measurement-landmarks.json',import.meta.url),'utf8'));
 const keys = measurementLandmarks.map(m=>m.key);
 const uploadSchema = z.strictObject({ heightCm:z.number().finite().min(50).max(250),
-  mimeType:z.enum(['image/png','image/jpeg','image/webp']), imageBase64:z.string().min(1).max(12_000_000) });
+  mimeType:z.enum(['image/png','image/jpeg','image/webp']), imageBase64:z.string().min(1).max(4_200_000) });
 const resultSchema = z.strictObject({ usablePhoto:z.boolean(), issue:z.string().nullable(),
   measurements:z.array(z.strictObject({ key:z.enum(keys), value:z.number().finite().positive().max(5000).nullable(),
     confidence:z.enum(['low','medium','high']), unit:z.enum(['mm','deg']) })) });

@@ -1,10 +1,10 @@
 import { validateImage } from './image-upload.mjs';
 import { estimateBodyMeasurements } from './measurement-api.mjs';
 import { readFile } from 'node:fs/promises';
-import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { designs } from '@pattern-studio/catalog-engine';
 import { geminiJSON, analysisSchema, matchSchema } from './gemini.mjs';
+import { createSessionToken, readSessionToken } from './session-token.mjs';
 import { garmentIntentSchema } from '../src/photo-intent.ts';
 import { specSchema } from '../src/schema.ts';
 import { penelopeSchema, penelopeInputSchema } from '../src/freesewing/schema.ts';
@@ -12,7 +12,7 @@ import { validateCatalogSpec } from '../src/freesewing/catalog-runtime.ts';
 const catalog = JSON.parse(await readFile(new URL('../supported-designs.json', import.meta.url), 'utf8'));
 const designCatalog = JSON.parse(await readFile(new URL('../design-catalog.json', import.meta.url), 'utf8'));
 const eligible = catalog.supportedDesigns.filter(d => d.photoMatchEligible && d.kind !== 'foundation-block');
-const sessions = new Map();
+const eligibleById = new Map(eligible.map(design => [design.designId, design]));
 export function optionDefinitions(id) {
   if (id === 'gathered_skirt') return { 'garment.ruffle.enabled': { type: 'boolean' } };
   if (id === 'penelope') return designCatalog.designs.find(d => d.designId === id).options;
@@ -46,20 +46,25 @@ export function resolveSession(session, input) {
   const intent = garmentIntentSchema.parse({ ...session.intent, measurements: spec.measurements, preferences: { ...session.intent.preferences, finishedLengthMm: id === 'gathered_skirt' ? spec.garment.length : null } });
   return { spec, intent, match: { ...session.match, name: session.design.name } };
 }
-const uploadSchema = z.strictObject({ filename: z.string().min(1).max(300), mimeType: z.enum(['image/png', 'image/jpeg', 'image/webp']), data: z.string().min(1).max(12_000_000), notes: z.string().max(2000) });
+const uploadSchema = z.strictObject({ filename: z.string().min(1).max(300), mimeType: z.enum(['image/png', 'image/jpeg', 'image/webp']), data: z.string().min(1).max(4_200_000), notes: z.string().max(2000) });
 
 async function readJSON(req) {
   if (!req.headers['content-type']?.startsWith('application/json')) throw new Error('Expected an application/json request.');
   let total = 0; const chunks = [];
-  for await (const chunk of req) { total += chunk.length; if (total > 12_100_000) throw new Error('The upload is too large. Maximum image size is 8 MB.'); chunks.push(chunk); }
+  for await (const chunk of req) { total += chunk.length; if (total > 4_300_000) throw new Error('The upload is too large. Maximum image size is 3 MB.'); chunks.push(chunk); }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw new Error('Invalid JSON request.'); }
 }
 function send(res, status, body) { if (res.destroyed) return; res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); }
+function sameOrigin(req) {
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+  const origin = req.headers.origin;
+  if (!host || !origin) return false;
+  try { return new URL(origin).host === host; } catch { return false; }
+}
 export async function handlePhotoAPI(req, res) {
   if (req.url === '/api/health' && req.method === 'GET') { send(res, 200, { provider: 'gemini', configured: Boolean(process.env.GEMINI_API_KEY), model: process.env.GEMINI_MODEL || 'gemini-3.6-flash' }); return; }
   if (req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
-  const allowedHosts = ['127.0.0.1:4173', 'localhost:4173'];
-  if (!allowedHosts.includes(req.headers.host) || (req.headers.origin && !['http://127.0.0.1:4173','http://localhost:4173'].includes(req.headers.origin))) { send(res, 403, { error: 'Only the local Pattern Studio can call this endpoint.' }); return; }
+  if (!sameOrigin(req)) { send(res, 403, { error: 'Only this Sewberry site can call the photo service.' }); return; }
   const controller = new AbortController();
   const onClose = () => { if (!res.writableEnded) controller.abort(); };
   res.on('close', onClose);
@@ -78,14 +83,13 @@ export async function handlePhotoAPI(req, res) {
       if (match.status !== 'matched') { send(res,200,{ status: match.status, intent, summary: analysis.summary, clarificationQuestions: match.clarificationQuestions, explanation: match.explanation }); return; }
       if (!design) throw new Error('Gemini selected an unregistered design. Try analyzing again.');
       const options = validateOptionValues(design.designId,match.optionValues);
-      for (const [id,s] of sessions) if (s.expires < Date.now()) sessions.delete(id);
-      if (sessions.size >= 50) sessions.delete(sessions.keys().next().value);
-      const sessionId = randomUUID(); sessions.set(sessionId,{ intent, match, design, expires: Date.now()+30*60*1000 });
+      const sessionId = createSessionToken({ intent, match, design, expires: Date.now()+30*60*1000 });
       send(res,200,{ status: 'matched', sessionId, intent, summary: analysis.summary, match: { ...match, name: design.name }, pendingSpec: pendingSpec(design,options), requiredMeasurements: design.requiredMeasurementKeys });
     } else if (req.url === '/api/resolve') {
-      const { sessionId, settings } = z.strictObject({ sessionId: z.string().uuid(), settings: z.unknown() }).parse(body);
-      const session = sessions.get(sessionId);
-      if (!session || session.expires < Date.now()) { send(res,409,{ error: 'This analysis expired. Analyze your photo again.' }); return; }
+      const { sessionId, settings } = z.strictObject({ sessionId: z.string().min(1).max(20_000), settings: z.unknown() }).parse(body);
+      let session;
+      try { session = readSessionToken(sessionId, eligibleById); }
+      catch (error) { send(res,409,{ error: error.message }); return; }
       send(res,200,resolveSession(session,settings));
     } else send(res,404,{error:'Unknown API endpoint.'});
   } catch (error) {
