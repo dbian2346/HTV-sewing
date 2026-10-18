@@ -549,7 +549,7 @@ $('analyze-photo').addEventListener('click', async () => {
   resetPhotoResult();
   const revision = analysisRevision, file = referenceFile;
   const controller = new AbortController(); analysisAbort = controller; analyzing = true;
-  const button = $<HTMLButtonElement>('analyze-photo'); button.disabled = true; button.textContent = 'Analyzing and matching…';
+  const button = $<HTMLButtonElement>('analyze-photo'); button.disabled = true; button.textContent = 'Analyzing';
   $('photo-status').textContent = '';
   $('draft-status').textContent = 'Analyzing photo…'; setFlowStep('analysis');
   try {
