@@ -6,7 +6,7 @@ export const observationsSchema = z.strictObject({
 });
 export const analysisSchema = z.strictObject({ status: z.enum(['analyzed', 'needs_clarification', 'unsupported']), summary: z.string(), observations: observationsSchema, clarificationQuestions: z.array(z.string()) });
 export const matchSchema = z.strictObject({ status: z.enum(['matched', 'needs_clarification', 'unsupported']), designId: z.string().nullable(), confidence: z.enum(['low', 'medium', 'high']), explanation: z.string(), differences: z.array(z.string()), clarificationQuestions: z.array(z.string()), optionValues: z.array(z.strictObject({ key: z.string(), value: z.union([z.string(), z.number(), z.boolean()]), evidence: z.string() })) });
-export async function geminiJSON(schema, prompt, image, { fetchImpl = fetch, apiKey = process.env.GEMINI_API_KEY, model = process.env.GEMINI_MODEL || 'gemini-3.6-flash', signal } = {}) {
+export async function geminiJSON(schema, prompt, image, { fetchImpl = fetch, apiKey = process.env.GEMINI_API_KEY || process.env.gemini_api_key, model = process.env.GEMINI_MODEL || 'gemini-3.6-flash', signal } = {}) {
   if (!apiKey) throw new Error('GEMINI_API_KEY is missing. Add it to .env and restart npm run dev.');
   const jsonSchema = z.toJSONSchema(schema); delete jsonSchema.$schema;
   const parts = [{ text: prompt }];

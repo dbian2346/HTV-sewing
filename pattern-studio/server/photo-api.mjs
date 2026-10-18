@@ -63,7 +63,7 @@ function sameOrigin(req) {
 }
 export async function handlePhotoAPI(req, res) {
   const pathname = req.url?.split('?')[0];
-  if (pathname === '/api/health' && req.method === 'GET') { send(res, 200, { provider: 'gemini', configured: Boolean(process.env.GEMINI_API_KEY), model: process.env.GEMINI_MODEL || 'gemini-3.6-flash' }); return; }
+  if (pathname === '/api/health' && req.method === 'GET') { send(res, 200, { provider: 'gemini', configured: Boolean(process.env.GEMINI_API_KEY || process.env.gemini_api_key), model: process.env.GEMINI_MODEL || 'gemini-3.6-flash' }); return; }
   if (req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
   if (!sameOrigin(req)) { send(res, 403, { error: 'Only this Sewberry site can call the photo service.' }); return; }
   const controller = new AbortController();
