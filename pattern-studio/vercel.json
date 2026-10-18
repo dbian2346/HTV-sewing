@@ -4,12 +4,7 @@
   "outputDirectory": "out",
   "functions": {
     "api/*.mjs": {
-      "includeFiles": [
-        "src/**",
-        "server/**",
-        "engines/**",
-        "*.json"
-      ],
+      "includeFiles": "src/**",
       "maxDuration": 120
     }
   }
