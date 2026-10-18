@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="/main.css" />
 </head>
 <body class="onboarding-active">
-  <header class="phone-status" aria-hidden="true"><img src="/assets/img941.svg" alt=""><div><img src="/assets/imgNetworkSignalLight.svg" alt=""><img src="/assets/imgWiFiSignalLight.svg" alt=""><img src="/assets/imgBatteryLight.svg" alt=""></div></header>
   <section id="onboarding" data-stage="welcome" aria-label="Welcome to Sewberry">
     <div class="onboard-brand" aria-hidden="true"><span class="berry-crop"><img src="/assets/onboard-berry.png" alt=""></span><img class="mini-wordmark" src="/assets/onboard-wordmark.png" alt=""></div>
     <button id="onboard-back" class="text-button" aria-label="Back">←</button>
@@ -26,7 +25,6 @@
       <p class="onboard-subtitle">Save your measurements and keep your sewing<br>creations happily in one place.</p>
       <div class="demo-providers"><button class="provider apple" disabled><img src="/assets/onboard-apple.png" alt="">Continue with Apple</button><button class="provider google" disabled><img src="/assets/onboard-google.png" alt="">Continue with Google</button><button class="provider email" disabled><img src="/assets/onboard-email.svg" alt="">Continue with email</button></div>
       <div class="guest-divider"><span>or</span></div><button id="continue-guest" class="text-button">Explore as a guest</button>
-      <p class="demo-note">Demo · Registration is unavailable</p>
     </section>
     <section data-onboard-page="intro" class="onboard-intro" hidden>
       <div class="mannequin-hero"><img src="/assets/onboard-mannequin.svg" alt="Dress form with measuring tape"></div>
@@ -78,7 +76,7 @@
     <div class="error-panel" id="errors" role="alert" hidden></div>
     <div class="assistant-label" id="assistant-label" hidden><span>♡</span><strong>sewberry</strong> just now</div>
     <section id="analysis-card" class="analysis-card" aria-labelledby="analysis-heading" hidden><div><h2 id="analysis-heading">What’s in your reference</h2><p id="analysis-summary"></p><ul id="analysis-features" class="feature-chips"></ul><p class="field-help">The garment description is stored before any catalog design is selected. Enter your actual measurements below.</p></div><div class="analysis-unknowns"><h3>Still needs your input</h3><ul id="analysis-unknowns"></ul></div></section>
-    <div class="customize-actions"><button id="continue-measurements" class="primary-button">Your measurements <span>→</span></button><button id="edit-inspiration" class="text-button">Edit photo & notes</button></div>
+    <div class="customize-actions"><button id="edit-inspiration" class="text-button">Edit photo & notes</button></div>
     <section id="match-result" class="match-result" aria-live="polite" hidden><span class="eyebrow">AUTOMATIC CATALOG MATCH</span><h2 id="matched-name"></h2><p id="matched-reason"></p><p id="matched-differences" class="field-help"></p></section>
 
     <section id="fabric-screen" aria-label="Fabric settings">
@@ -141,7 +139,6 @@
         <div class="photo-generate"><button id="generate-from-photo" class="primary-button">Continue to Fabric <span aria-hidden="true">→</span></button></div>
       </aside>
       <section class="result-column" aria-label="Generated pattern">
-        <section class="efficiency-card" data-node-id="1:7233"><div class="efficiency-row"><div class="efficiency-ring"><img src="/assets/pattern-imgSvg.svg" alt=""><strong id="fabric-efficiency">—</strong></div><div class="efficiency-copy"><h2>Fabric Efficiency 🌱</h2><p id="fabric-remnant">Awaiting layout</p></div><span class="efficiency-badge">☆ Layout<br>Pending</span></div><div class="scrap-idea"><span>✨</span><p><strong>Scrap idea:</strong> Save remnants for matching accessories.</p></div></section>
         <div class="preview-card pattern-map" data-node-id="1:7258"><div class="map-heading"><h2><span>📏</span><span id="fabric-map-title">140 cm × 3.0 m Pattern Map</span></h2><button type="button" id="map-fullscreen">🔍 Full Screen</button></div>
           <div id="panel-pattern" role="tabpanel" aria-labelledby="tab-pattern"><div class="map-ruler" aria-hidden="true"><span>0 m</span><span id="ruler-quarter">0.75 m</span><span id="ruler-half">1.5 m</span><span id="ruler-three-quarter">2.25 m</span><span id="ruler-end">3.0 m</span></div><div class="canvas" id="canvas"><div id="svg-container" aria-label="Generated sewing pattern preview"></div><div class="canvas-empty" id="canvas-empty">Generate your pattern to preview the pieces.</div></div></div>
           <div class="map-footer"><span id="map-piece-count">No pieces yet</span><button type="button" id="open-piece-list">Piece List <img src="/assets/pattern-imgContainer7.svg" alt=""></button></div>

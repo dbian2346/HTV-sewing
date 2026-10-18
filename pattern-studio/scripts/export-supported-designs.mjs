@@ -28,6 +28,8 @@ const entries = catalog.designs.map(entry => {
     requiredMeasurementKeys: curated ? entry.requiredMeasurements : config.measurements,
     specificationFormat: 'freesewing-v2',
     source: entry.source,
+    ...(entry.testCoverage ? {testCoverage:entry.testCoverage} : {}),
+    ...(entry.designId === 'waralee' ? {optionalMeasurementKeys:config.optionalMeasurements} : {}),
   };
 });
 entries.push({

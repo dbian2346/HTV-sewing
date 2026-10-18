@@ -63,7 +63,8 @@ export function mountCatalogForm(parent: HTMLElement, id: string) {
   for (const key of Object.keys(catalogNames)) delete catalogNames[key];
   const required = section(parent, 'Your measurements');
   const descriptions = measurementsData.measurements as Record<string, { description: string; unit: string }>;
-  for (const key of design.requiredMeasurements) field(required, `measurements.${key}`, label(key), descriptions[key]?.unit ?? 'mm', 0.01, key === 'shoulderSlope' ? 60 : 5000);
+  const keys = id === 'waralee' ? [...design.requiredMeasurements, ...design.optionalMeasurements] : design.requiredMeasurements;
+  for (const key of keys) field(required, `measurements.${key}`, label(key), descriptions[key]?.unit ?? 'mm', 0.01, key === 'shoulderSlope' ? 60 : 5000, id === 'waralee' && key === 'waistBack');
 }
 export function writeCatalogForm(form: HTMLFormElement, spec: CatalogSpec) {
   for (const [path, name] of Object.entries(catalogPaths)) {

@@ -3796,7 +3796,7 @@
       "engine": "FreeSewing",
       "engineVersion": "4.10.2",
       "runtimeStatus": "enabled-unverified",
-      "testStatus": "not-tested",
+      "testStatus": "automated-checks",
       "fitValidated": false,
       "description": "Wrap pants with overlapping waist sections, configurable leg fullness, ties and pocket variations.",
       "photoMatchEligible": true,
@@ -3840,7 +3840,18 @@
         "waistToHips"
       ],
       "specificationFormat": "freesewing-v2",
-      "source": "https://freesewing.dev/reference/designs/waralee/"
+      "source": "https://freesewing.eu/designs/waralee/",
+      "testCoverage": [
+        "drafting",
+        "simplified-measurements",
+        "svg-export",
+        "layout-geometry",
+        "pdf-export"
+      ],
+      "optionalMeasurementKeys": [
+        "waist",
+        "waistBack"
+      ]
     },
     {
       "designId": "yuri",

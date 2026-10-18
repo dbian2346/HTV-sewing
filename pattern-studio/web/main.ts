@@ -1,5 +1,5 @@
 import './style.css';
-import { mountQuickMeasurements, lengthKey, type QuickDesign } from './quick-measurements.js';
+import { mountQuickMeasurements, quickLengthMm, type QuickDesign } from './quick-measurements.js';
 import { mountFabricControls } from './fabric.js';
 import { mountOnboarding } from './onboarding.js';
 import { profileValue, type MeasurementProfile } from './measurement-profile.js';
@@ -60,11 +60,12 @@ const inputField = (name: string) => form.elements.namedItem(name) as HTMLInputE
 const n = (name: string) => inputField(name).valueAsNumber;
 const quickMeasurements = mountQuickMeasurements($('quick-measurements'));
 let estimatedMeasurementKeys: string[] = [];
+let quickDraftIssues: string[] = [];
 function currentQuickDesign():QuickDesign {
   if(designSelect.value === 'gathered_skirt')return {family:'skirt',required:['waist','hip'],baseline:{waist:760,hip:1020}};
   const baseline = designSelect.value === 'penelope' ? fittedExample() as PenelopeSpec : catalogExample(designSelect.value);
   const entry = catalogEntries.find(entry=>entry.designId===designSelect.value)!;
-  return {family:entry.family,required:designSelect.value==='penelope'?Object.keys(baseline.measurements):entry.requiredMeasurements,baseline:baseline.measurements};
+  return {designId:entry.designId,options:designSelect.value==='penelope'?retainedFittedSpec?.options:retainedCatalogSpec?.options,family:entry.family,required:designSelect.value==='penelope'?Object.keys(baseline.measurements):entry.requiredMeasurements,baseline:baseline.measurements};
 }
 function configureQuickMeasurements(preferProfile=false) {
   const design=currentQuickDesign(),values:Record<string,number>={};
@@ -75,14 +76,15 @@ function configureQuickMeasurements(preferProfile=false) {
   for(const key of ['shoulderToShoulder','chest','waist']){
     const value=profileValue(measurementProfile,key,designSelect.value);if((preferProfile||values[key]===undefined)&&value!==undefined)values[key]=value;
   }
-  const length=designSelect.value==='gathered_skirt'?n('length'):values[lengthKey(design)??''];
+  const length=designSelect.value==='gathered_skirt'?n('length'):quickLengthMm(design,values);
   quickMeasurements.set(design,values,Number.isFinite(length)?length:undefined);
 }
 function syncQuickMeasurements() {
   const known={...measurementProfile?.measurements};
   if(designSelect.value==='gathered_skirt'&&known.seat!==undefined)known.hip=known.seat;
   const completed=quickMeasurements.complete(known,measurementProfile?.height_mm);
-  estimatedMeasurementKeys=completed.estimated;
+  estimatedMeasurementKeys=completed.estimated;quickDraftIssues=completed.issues;
+  if(retainedCatalogSpec&&designSelect.value==='waralee')Object.assign(retainedCatalogSpec.options,completed.optionOverrides);
   $('quick-estimate-note').hidden=!estimatedMeasurementKeys.length;
   const paths=designSelect.value==='gathered_skirt'?fieldPaths:designSelect.value==='penelope'?fittedPaths:catalogPaths;
   for(const [key,value] of Object.entries(completed.measurements)){
@@ -94,6 +96,7 @@ function syncQuickMeasurements() {
 
 function readForm() {
   syncQuickMeasurements();
+  if(quickDraftIssues.length)throw new Error(quickDraftIssues[0]);
   if (!['gathered_skirt', 'penelope'].includes(designSelect.value)) return readCatalogForm(form, retainedCatalogSpec!);
   if (designSelect.value === 'penelope') return readFittedForm(form, retainedFittedSpec);
   return {
@@ -390,7 +393,6 @@ function showScreen(screen: PhoneScreen) {
     : '';
   document.title = `Sewberry — ${titles[screen]}`;
   refreshPhoneNavigation();
-  $('continue-measurements').hidden = false;
   $('pattern-settings').hidden = screen !== 'measure' && screen !== 'customize';
   $('measurement-source').hidden = measurementProfile?.source !== 'photo_estimate';
   window.scrollTo(0, 0);
@@ -440,7 +442,6 @@ $('open-cutting-steps').addEventListener('click', () => {
   activateTab($<HTMLButtonElement>('tab-instructions'));
   $('pattern-tools').scrollIntoView({behavior:'smooth',block:'start'});
 });
-$('continue-measurements').addEventListener('click', () => showScreen('measure'));
 $('edit-inspiration').addEventListener('click', () => showScreen('photo'));
 $('nav-home').addEventListener('click', () => showScreen('photo'));
 $('take-photo').addEventListener('click', () => {
@@ -610,7 +611,7 @@ function showMatch() {
   $('matched-reason').textContent = `${photoMatch.explanation} Match confidence: ${photoMatch.confidence}.`;
   $('matched-differences').textContent = photoMatch.differences.join(' ');
 }
-generatePhotoButton.addEventListener('click', () => { if(quickMeasurements.valid()) { syncQuickMeasurements(); showScreen('fabric'); } });
+generatePhotoButton.addEventListener('click', () => { if(quickMeasurements.valid()) { syncQuickMeasurements(); if(quickDraftIssues.length) { showErrors(new Error(quickDraftIssues[0])); return; } clearErrors(); showScreen('fabric'); } });
 generateFabricButton.addEventListener('click', async () => {
   if (!photoIntent || !photoSessionId || generateFabricButton.disabled) return;
   if (!quickMeasurements.valid(false)) { showScreen('measure'); quickMeasurements.valid(); return; }

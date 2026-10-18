@@ -57,6 +57,8 @@ export function validateCatalogSpec(input: unknown): CatalogSpec {
     }
     optionShape[inputKey] = validator.optional();
   }
+  if(spec.garment.designId==='waralee'&&spec.measurements.waistToHips!>=spec.measurements.crotchDepth!)
+    throw new z.ZodError([{code:'custom',path:['measurements','waistToHips'],message:'Waralee needs waist-to-hip depth shorter than crotch depth. Recheck your saved/photo measurements.'}]);
   // Nest validation so errors retain measurements/options prefixes for the form.
   z.strictObject({ measurements: z.strictObject(measurementShape), options: z.strictObject(optionShape) })
     .parse({ measurements: spec.measurements, options: spec.options });
@@ -84,10 +86,13 @@ export function generateCatalogPattern(input: unknown): CatalogPattern {
     idPrefix: `studio-${spec.garment.designId}-` }).use(themePlugin).use(i18nPlugin, translate).draft();
   const logs = drafted.getLogs(), errors = [...logs.pattern.error, ...logs.sets.flatMap(s => s.error)];
   if (errors.length) throw new Error(`FreeSewing could not draft ${spec.garment.designId}: ${[...new Set(errors)].join('; ')}`);
-  // Render once: retain native transformed groups, snippets, text paths and markings.
+  if(spec.garment.designId==='waralee')for(const set of drafted.parts)for(const part of Object.values(set))
+    for(const [key,snippet] of Object.entries(part.snippets))if(snippet.def==='logo')delete part.snippets[key];
+  // Render once: retain native transformed groups, text paths and cutting markings.
   // Build each root SVG ourselves because the packaged Defs serializer writes attributes instead of elements.
   drafted.render();
-  const svg = drafted.svg, defs = Object.values(svg.defs.list).join('\n');
+  const svg = drafted.svg, defs = Object.entries(svg.defs.list)
+    .filter(([key])=>spec.garment.designId!=='waralee'||key!=='logo').map(([,value])=>value).join('\n');
   const cutlist = drafted.setStores[0]?.get('cutlist') ?? {};
   const pieces: VectorPiece[] = [];
   const layoutPieces: LayoutPiece[] = [];
@@ -97,7 +102,13 @@ export function generateCatalogPattern(input: unknown): CatalogPattern {
     if (![width, height, stack.topLeft.x, stack.topLeft.y].every(Number.isFinite) || Math.min(width, height) <= 0)
       throw new Error(`Invalid bounds for ${id}. Try another option or measurement set.`);
     const nativeParts = [...stack.parts], info = cutlist[nativeParts[0]?.name ?? id];
-    for (const part of nativeParts) if (!part.hidden) layoutPieces.push(...nativePartLayout(part, cutlist[part.name], id, spec.construction.seamAllowanceMm));
+    for (const part of nativeParts) if (!part.hidden) {
+      // Waralee facings include their allowance directly in the native seamSeam path.
+      const facing = spec.garment.designId === 'waralee' && ['waralee.facingFront','waralee.facingBack'].includes(part.name)
+        ? part.paths.seamSeam : undefined;
+      layoutPieces.push(...nativePartLayout(part, cutlist[part.name], id, spec.construction.seamAllowanceMm,
+        facing ? {pathId:'seamSeam',ops:facing.ops} : undefined));
+    }
     const label = cutLabel(info), name = id.replaceAll('.', ' · ');
     const labelSize = Math.min(3, (width - 12) / Math.max(1, label.length * 0.6));
     const markup = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="freesewing" width="${width}mm" height="${height}mm" viewBox="0 0 ${width} ${height}">
@@ -131,6 +142,7 @@ export function generateCatalogPattern(input: unknown): CatalogPattern {
 
 export interface NativeCutInfo { cutOnFold?: import('../geometry.js').Point[]; grain?: number; grainOrigin?: string; materials: Record<string, { cut: number; identical?: boolean; onFold?: boolean; onBias?: boolean }[]> }
 export interface NativeDraft {
+  parts: Record<string,{snippets:Record<string,{def:string}>}>[];
   use(plugin: unknown, data?: unknown): NativeDraft; draft(): NativeDraft; render(): string;
   getLogs(): { pattern: { error: string[]; warn: string[] }; sets: { error: string[]; warn: string[] }[] };
   setStores: { get(key: string): Record<string, NativeCutInfo> }[];

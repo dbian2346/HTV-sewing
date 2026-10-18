@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "measurementSystem": "metric",
+  "garment": { "designId": "waralee", "family": "trousers", "name": "Waralee wrap pants" },
+  "measurements": { "seat": 1020, "inseam": 800, "crotchDepth": 280, "waistToHips": 190, "waist": 760 },
+  "options": {},
+  "construction": { "seamAllowanceMm": 10 },
+  "render": { "complete": true, "paperless": false },
+  "print": { "paper": "A4", "marginMm": 12, "overlapMm": 10, "calibrationSquareMm": 50 }
+}

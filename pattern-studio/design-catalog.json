@@ -17207,11 +17207,11 @@
       "designers": "Wouter Van Wageningen",
       "developers": "Wouter Van Wageningen",
       "runtimeStatus": "enabled-unverified",
-      "testStatus": "not-tested",
+      "testStatus": "automated-checks",
       "fitValidated": false,
       "metadataStatus": "imported-unverified",
       "metadataPackageVersion": "4.10.2",
-      "source": "https://freesewing.dev/reference/designs/waralee/",
+      "source": "https://freesewing.eu/designs/waralee/",
       "packageSource": "https://www.npmjs.com/package/@freesewing/waralee/v/4.10.2",
       "requiredMeasurements": [
         "crotchDepth",
@@ -17381,7 +17381,14 @@
           "crux"
         ],
         "descriptionBasis": "Editorial summary of installed FreeSewing descriptions, parts and declared options; not photo-validated."
-      }
+      },
+      "testCoverage": [
+        "drafting",
+        "simplified-measurements",
+        "svg-export",
+        "layout-geometry",
+        "pdf-export"
+      ]
     },
     {
       "designId": "yuri",

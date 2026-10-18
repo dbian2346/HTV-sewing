@@ -1,0 +1,13 @@
+# Waralee wrap pants integration
+
+[Waralee](https://freesewing.eu/designs/waralee/) was already registered in both catalogs. Its FreeSewing 4.10.2 constructor works with coherent native measurements. The observed `Path.shiftAlong` failure came from the simplified form mapping overall garment length to `waistToHips`, an anatomical depth. The remaining injection/clone errors were downstream failures from the prototype part.
+
+Customize still exposes just **Length** and **Waist**, in centimeters. It passes the optional native `waist` measurement through for waist shaping and straps. Secondary body dimensions use the existing saved/photo profile or labeled proportional estimates.
+
+For this design, the nominal finished front length is `crotchDepth * (1 + waistRaise) * 1.08 + inseam * (legSize - hemWidth)`. Percent options are fractions in this formula. The adapter preserves anatomical hip and crotch depths, accounts for the hem allowance, and derives an estimated inseam if none is saved. With a saved inseam, it instead adjusts the native leg-size percentage within its declared 50–90% range; unavailable lengths receive an actionable range message. Native drawings and full-spec callers keep their original options and millimeter measurements.
+
+All SVG and layout geometry comes from the native parts. Waralee's facings use the native `seamSeam` path, which already includes allowance in its dimensions. The exporter uses that path directly, without adding allowance or approximating curves. The upstream design does not supply complete grain/cut-pair constraints for every piece; missing constraints remain flagged for optimizer review rather than invented.
+
+`tests/waralee.test.ts` covers registration, the two-field interface, multiple waist/length combinations, actual native hem-fold coordinates, saved inseam handling, option variants, early rejection of corrupted hip depth, cutting quantities, exact facing dimensions, curved outlines, and tiled PDF export. `testStatus` is `automated-checks`; `fitValidated` remains false. No physical fit or exhaustive option validation is claimed.
+
+PDF conversion normalizes the native theme's `svg.freesewing` scope and removes CSS comments before passing styles to svg-for-pdfkit, whose CSS parser accepts only simple selectors. Without this normalization, closed pattern paths fall back to solid black fills. Browser SVG styles remain intact; PDF output preserves unfilled cutting outlines, allowance lines, seam/fold markings, and intentional small snippet fills. `tests/svg-pdf.test.ts` checks the actual PDF drawing operators for strokes, dash patterns, hidden paths and intentional fills.

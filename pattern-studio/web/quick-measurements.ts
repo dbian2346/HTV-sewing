@@ -1,6 +1,6 @@
 /** UI values are centimeters; drafting values and saved profiles remain millimeters. */
 export type MeasurementKind = 'top' | 'bottom' | 'other';
-export interface QuickDesign { family:string; required:string[]; baseline:Record<string,number> }
+export interface QuickDesign { designId?:string; options?:Record<string,unknown>; family:string; required:string[]; baseline:Record<string,number> }
 export function measurementKind(design:QuickDesign):MeasurementKind {
   if(['skirt','trousers','leggings'].includes(design.family))return 'bottom';
   if(design.required.includes('chest')||design.required.includes('shoulderToShoulder'))return 'top';
@@ -8,7 +8,15 @@ export function measurementKind(design:QuickDesign):MeasurementKind {
   return 'other';
 }
 export function lengthKey(design:QuickDesign) {
-  return ['waistToFloor','waistToKnee','waistToUpperLeg','waistToSeat','waistToHips'].find(key=>design.required.includes(key));
+  return ['waistToFloor','waistToKnee','inseam','waistToUpperLeg','waistToSeat','waistToHips'].find(key=>design.required.includes(key));
+}
+export function quickLengthMm(design:QuickDesign, measurements:Record<string,number>):number|undefined {
+  if(design.designId==='waralee'){
+    if(measurements.inseam===undefined||measurements.crotchDepth===undefined)return undefined;
+    return Math.round((measurements.crotchDepth*(1+Number(design.options?.waistRaisePct??0)/100)*1.08
+      +measurements.inseam*(Number(design.options?.legSizePct??75)-Number(design.options?.hemWidthPct??1.75))/100)*1e6)/1e6;
+  }
+  return measurements[lengthKey(design)??''];
 }
 export function quickKeys(design:QuickDesign) {
   const kind=measurementKind(design);
@@ -21,9 +29,10 @@ export function completeMeasurements(design:QuickDesign, entered:Record<string,n
   const chestScale=(mm.chest??known.chest??1000)/(design.baseline.chest??1000);
   const verticalScale=heightMm?heightMm/1700:kind==='top'?(mm.shoulderToShoulder??420)/(design.baseline.shoulderToShoulder??420)
     :primaryLength==='waistToFloor'?(mm.length??1060)/(design.baseline.waistToFloor??1060):waistScale;
-  const measurements:Record<string,number>={},estimated:string[]=[];
+  const measurements:Record<string,number>={},estimated:string[]=[],optionOverrides:Record<string,number>={},issues:string[]=[];
+  const waralee=design.designId==='waralee';
   for(const key of design.required){
-    if(key===primaryLength&&kind==='bottom'){measurements[key]=mm.length!;continue;}
+    if(key===primaryLength&&kind==='bottom'&&!waralee){measurements[key]=mm.length!;continue;}
     if(mm[key]!==undefined){measurements[key]=mm[key]!;continue;}
     if(known[key]!==undefined){measurements[key]=known[key]!;continue;}
     const base=design.baseline[key];if(base===undefined)throw new Error(`No drafting proportion available for ${key}.`);
@@ -31,7 +40,22 @@ export function completeMeasurements(design:QuickDesign, entered:Record<string,n
       :/^waist/.test(key)||kind==='bottom'?waistScale:chestScale;
     measurements[key]=Math.round(base*scale*100)/100;estimated.push(key);
   }
-  return {measurements,estimated};
+  if(waralee){
+    // Waralee's finished front length is eased crotch depth + inseam * (legSize - hemWidth).
+    // waistToHips is an anatomical depth, never a garment-length input.
+    measurements.waist=mm.waist!;
+    if(known.waistBack!==undefined)measurements.waistBack=known.waistBack;
+    const rise=measurements.crotchDepth!*(1+Number(design.options?.waistRaisePct??0)/100)*1.08;
+    const legLength=mm.length!-rise;
+    if(Number.isFinite(legLength)&&legLength<=0)issues.push(`Waralee length must exceed the crotch depth (${(rise/10).toFixed(1)} cm).`);
+    if(known.inseam!==undefined){
+      const hemPct=Number(design.options?.hemWidthPct??1.75);
+      const pct=legLength/known.inseam*100+hemPct;
+      if(Number.isFinite(pct)&&(pct<50||pct>90))issues.push(`With your saved inseam, Waralee supports lengths from ${((rise+known.inseam*(.5-hemPct/100))/10).toFixed(1)} to ${((rise+known.inseam*(.9-hemPct/100))/10).toFixed(1)} cm.`);
+      if(Number.isFinite(pct))optionOverrides.legSizePct=pct;
+    }else measurements.inseam=legLength/((Number(design.options?.legSizePct??75)-Number(design.options?.hemWidthPct??1.75))/100);
+  }
+  return {measurements,estimated,optionOverrides,issues};
 }
 export function mountQuickMeasurements(parent:HTMLElement) {
   let design:QuickDesign={family:'skirt',required:['waist','hip'],baseline:{waist:760,hip:1020}};

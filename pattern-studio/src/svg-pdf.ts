@@ -4,7 +4,10 @@ import HelveticaBold from 'pdfkit/standard-fonts/HelveticaBold';
 import HelveticaOblique from 'pdfkit/standard-fonts/HelveticaOblique';
 import HelveticaBoldOblique from 'pdfkit/standard-fonts/HelveticaBoldOblique';
 import * as svgConverter from 'svg-for-pdfkit';
-const SVGtoPDF = (svgConverter as unknown as { SVGtoPDF: typeof import('svg-for-pdfkit') }).SVGtoPDF;
+const converter = svgConverter as unknown as {
+  SVGtoPDF?: typeof import('svg-for-pdfkit'); default?: typeof import('svg-for-pdfkit');
+};
+const SVGtoPDF = (converter.SVGtoPDF ?? converter.default)!;
 import { Buffer } from 'buffer';
 
 /** Complete native SVG -> vector PDF; preserves transforms, symbols and text paths. */
@@ -23,8 +26,13 @@ export async function svgPDF(svg: string, widthPt: number, heightPt: number): Pr
       let offset = 0; for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; } resolve(bytes); });
   });
   const warnings: string[] = [];
+  // svg-for-pdfkit only supports simple CSS selectors and does not strip comments.
+  // Each native piece is a standalone FreeSewing SVG, so its root scope is redundant.
+  // Keep the original SVG intact for browser previews and normalize only PDF styles.
+  const pdfSvg = svg.replace(/<style\b([^>]*)>([\s\S]*?)<\/style>/gi, (_match, attributes: string, css: string) =>
+    `<style${attributes}>${css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\bsvg\.freesewing\s+/g, '')}</style>`);
   try {
-    SVGtoPDF(doc as never, svg, 0, 0, { width: widthPt, height: heightPt,
+    SVGtoPDF(doc as never, pdfSvg, 0, 0, { width: widthPt, height: heightPt,
       fontCallback: (_family, weight, italic) => `Helvetica${Number(weight) >= 600 || weight === 'bold' ? (italic ? '-BoldOblique' : '-Bold') : italic ? '-Oblique' : ''}`,
       imageCallback: () => { throw new Error('External images are not supported in pattern exports.'); },
       documentCallback: () => { throw new Error('External SVG documents are not supported in pattern exports.'); },
